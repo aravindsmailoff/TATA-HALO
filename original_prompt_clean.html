@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Halo — the ring that reads the night</title>
+<meta name="description" content="Halo is a titanium smart ring: three optical sensors, seven days on a charge, four grams. It reads your sleep, your heart and your readiness, and the page is drawn from it.">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Ccircle cx=%278%27 cy=%278%27 r=%275.5%27 fill=%27none%27 stroke=%27%23000%27 stroke-width=%272.4%27/%3E%3Ccircle cx=%278%27 cy=%2711.6%27 r=%271%27 fill=%27%234cff7a%27/%3E%3C/svg%3E">
+<!-- HALO — clarix's long cinematic scroll, whole; the subject is a smart ring built from its own
+     cross-section by a lathe, with a board and a cell inside that a clipping plane opens, sensors
+     that pulse at a resting heart rate, and a canvas that draws its readings around it at night. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,200;0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.170.0/build/three.module.js"}}</script>
+<style>
+/* ═════ HALO — stylesheet.
+   Chrome, type and every overlay from `clarix`: the long cinematic scroll with a fixed 3-D subject,
+   the hero title BETWEEN two canvases, the odometer preloader, the hero logo / vertical nav / info
+   block, the scroll-content wrapper with its titles, the gradient line + grayscale marquee, the
+   glass container with its stat columns, the phase-4 split feature, the flying words, the phase-5
+   corner titles, the phase-6 centred title and the glass footer. Sarabun 200/400/500.
+   Changed: the subject (a smart ring, not an AI model), the palette (the page goes to NIGHT in one
+   phase — the ring's one job), the copy. The scroll is 1600vh rather than 2800: a ring has six
+   phases, not eleven screens of marquee.
+   ─────────────────────────────────────────────────────────────────────────────
+   TIER 1 — PRIMITIVES ═════ */
+:root{
+  --raw-color-page:#ffffff;             /* clarix */
+  --raw-color-ink:#000000;              /* clarix */
+  --raw-color-night:#07090d;            /* derived — the page at night; the ring reads in the dark */
+  --raw-color-sensor:#4cff7a;           /* the optical sensors — the one colour on the page */
+  --raw-color-titanium:#c9ccd1;--raw-color-gold:#d4b273;--raw-color-graphite:#3a3d42;
+  --raw-gradient-line:linear-gradient(to right,#0091ff,#00aaff,#8000ff,#ff0099,#ff0000);  /* clarix */
+  --raw-inset:3.125rem;--raw-top:2.5rem;
+  --raw-text-hero:max(2.5rem,7vw);--raw-text-title:max(2.625rem,5.5vw);--raw-text-word:max(80px,25vw);
+  --raw-text-nav:1.1rem;--raw-text-body:1.0625rem;--raw-text-small:.85rem;
+  --raw-ease-reveal:cubic-bezier(.2,.8,.2,1);
+}
+:root{--page:var(--raw-color-page);--ink:var(--raw-color-ink);--night:var(--raw-color-night);--sensor:var(--raw-color-sensor);--face:"Sarabun",sans-serif;--ease:var(--raw-ease-reveal)}
+::-webkit-scrollbar{display:none}
+html{font-size:max(12px,.833333vw);background:var(--page)}
+body{margin:0;overflow-x:hidden;-ms-overflow-style:none;scrollbar-width:none;background-color:var(--page);height:1600vh;font-family:var(--face);color:var(--ink);transition:background-color 900ms var(--ease)}
+body.night{background-color:var(--night)}
+body.night .ink{color:#fff}
+*{box-sizing:border-box}
+a{color:inherit;text-decoration:none}
+.preload-hidden{opacity:0!important;pointer-events:none!important}
+.reveal-anim{transition:transform 1.6s var(--ease) .6s,opacity 1.6s ease .6s;will-change:transform,opacity}
+.preload-hidden.reveal-anim.from-top{transform:translateY(-20px)}
+.preload-hidden.reveal-anim.from-bottom{transform:translateY(20px)}
+canvas{display:block}
+#bg{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:1}
+#fg{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:3;pointer-events:auto;touch-action:pan-y}
+#read{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:4;pointer-events:none}
+/* ═════ HERO ═════ */
+.hero-logo{position:absolute;top:var(--raw-top);left:var(--raw-inset);z-index:5;height:1.75rem;display:flex;align-items:center;gap:.6rem;font-weight:500;font-size:1.1rem;letter-spacing:.02em}
+.hero-logo i{width:1.1rem;height:1.1rem;border-radius:50%;border:2px solid currentColor;display:inline-block}
+.hero-title{position:absolute;top:43%;transform:translateY(-50%);left:var(--raw-inset);font-weight:200;font-size:var(--raw-text-hero);margin:0;z-index:2;pointer-events:none;line-height:1;white-space:nowrap}
+.char-mask{display:inline-block;overflow:hidden;vertical-align:bottom;padding-top:.2em;margin-top:-.2em;padding-bottom:1.2em;margin-bottom:-1.2em;perspective:500px}
+.hero-char{display:inline-block;transform:translateY(110%) translateZ(-60px) rotateX(-65deg);transform-origin:bottom center;opacity:0;transition:transform 1.6s var(--ease),filter 1.6s ease,opacity 1.2s ease}
+.armed .hero-char{filter:blur(14px);will-change:transform,filter,opacity}
+.armed .hero-char.revealed{filter:blur(0)}
+.hero-char.revealed{transform:translateY(0) translateZ(0) rotateX(0deg);opacity:1}
+.animated-title .hero-char{transition:transform .8s var(--ease),filter .8s ease,opacity .6s ease}
+.hero-subtitle{font-weight:400}
+.hero-nav{position:absolute;top:var(--raw-top);right:var(--raw-inset);z-index:5;font-weight:400;display:flex;flex-direction:column;align-items:flex-end;gap:.75rem}
+.hero-nav a{font-size:var(--raw-text-nav);font-weight:400;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;transition:transform .2s ease;cursor:pointer}
+.hero-nav a:hover{transform:translateX(-4px)}
+.hero-nav .nav-arrow{font-size:1.2rem;line-height:1}
+.hero-info-block{position:absolute;bottom:var(--raw-inset);left:var(--raw-inset);z-index:5;width:20rem;display:flex;flex-direction:column}
+.hi-top{display:flex;justify-content:space-between;font-size:var(--raw-text-nav);font-weight:400;text-transform:uppercase;margin-bottom:2rem}
+.hi-text{font-size:var(--raw-text-body);line-height:1.5;opacity:.7;margin-bottom:2.5rem}
+.hi-btn{align-self:flex-start;padding:.875rem 3rem;border:1px solid currentColor;border-radius:2.5rem;background:rgb(255 255 255/.1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:.95rem;font-weight:400;letter-spacing:1px;transition:background .2s,transform .2s;cursor:pointer}
+.hi-btn:hover{background:rgb(255 255 255/.3);transform:translateY(-2px)}
+/* ═════ SCROLL CONTENT ═════ */
+.scroll-content-wrapper{position:absolute;top:calc(100vh + 34.375rem);left:0;width:100%;z-index:2;display:flex;flex-direction:column}
+.scroll-title-container{padding-left:var(--raw-inset);margin-bottom:60rem}   /* clarix: 37.5rem on 2800vh; the flow has to span phase two of a 1600vh page */
+.scroll-title-container h3,.feature-title{font-weight:200;font-size:var(--raw-text-title);letter-spacing:-.02em;white-space:nowrap;margin:0;line-height:1.1}
+.clients-container{width:100%;display:flex;flex-direction:column;margin-bottom:60rem}
+.clients-subtitle{font-size:var(--raw-text-nav);font-weight:400;text-transform:uppercase;padding-left:var(--raw-inset);margin-bottom:1rem}
+.clients-line{height:1px;margin-left:var(--raw-inset);margin-right:var(--raw-inset);background:var(--raw-gradient-line);margin-bottom:3rem}
+.marquee-container{width:100%;overflow:hidden;white-space:nowrap;opacity:.8}   /* clarix greys its logos with a filter here; on black text the filter is a no-op that still forces the animating strip to repaint on the main thread every frame — measured 31 fps with it, 121 without */
+.marquee-content{display:inline-flex;align-items:center;gap:6rem;padding-right:6rem;animation:marquee 25s linear infinite;font-size:2.4rem;font-weight:200;letter-spacing:-.01em}
+@keyframes marquee{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+.feature-container{width:100%;display:flex;flex-direction:column}
+.split-feature-container{width:100%;display:flex;flex-direction:column;padding-left:var(--raw-inset);padding-right:var(--raw-inset);margin-top:37.5rem}
+.pill-badge{display:inline-block;font-size:max(.875rem,1vw);font-weight:400;border:1px solid rgb(0 0 0/.2);border-radius:50px;padding:.3rem 1.2rem}
+body.night .pill-badge{border-color:rgb(255 255 255/.3)}
+.split-bottom{display:flex;flex-direction:column;align-items:flex-start;max-width:45rem}
+.feature-text{font-size:max(1.1rem,1.25vw);line-height:1.5;font-weight:300;opacity:.8}
+.phase4-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:5;pointer-events:none;display:flex;align-items:flex-end;justify-content:flex-end;opacity:0;transform:translateY(50px)}
+.phase4-container .split-feature-container{pointer-events:auto;margin-top:0;padding-top:4rem;padding-bottom:4rem;height:100vh;justify-content:space-between;width:auto;align-items:flex-start}
+.phase5-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:4;pointer-events:none;opacity:0}
+.phase5-title-left{position:absolute;top:var(--raw-top);left:var(--raw-inset);text-align:left;margin:0}
+.phase5-title-right{position:absolute;bottom:var(--raw-top);right:var(--raw-inset);text-align:right;margin:0}
+.phase5-desc-left{position:absolute;bottom:var(--raw-top);left:var(--raw-inset);text-align:left;max-width:25rem;margin:0}
+.phase5-label-right{position:absolute;top:var(--raw-top);right:var(--raw-inset);width:12rem;margin:0}
+.phase5-container .swatches{position:absolute;bottom:calc(var(--raw-top) + 9.5rem);left:var(--raw-inset);display:flex;gap:.75rem;pointer-events:auto}
+.sw{width:2.4rem;height:2.4rem;border-radius:50%;border:1px solid rgb(0 0 0/.15);background:var(--c);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--page),0 0 0 3px currentColor}
+.sw:hover{transform:translateY(-2px)}
+.phase6-container{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:2;pointer-events:none;opacity:0;display:flex;align-items:center;justify-content:center}
+.phase6-title{position:absolute;top:30vh;transform:translateY(-50%);left:0;width:100%;font-weight:200;font-size:var(--raw-text-hero);margin:0;line-height:1;text-align:center;white-space:nowrap;pointer-events:none}
+.phase6-footer-wrapper{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:4;pointer-events:none;transform:translateY(100vh)}
+.phase6-footer-wrapper *{pointer-events:auto}
+.glass-footer{position:absolute;bottom:var(--raw-top);left:var(--raw-inset);right:var(--raw-inset);padding:3rem;background:rgb(255 255 255/.4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:2rem;border:1px solid rgb(255 255 255/.5);box-shadow:0 8px 32px rgb(0 0 0/.05);display:flex;flex-direction:column;color:var(--ink)}
+body.night .glass-footer{background:rgb(255 255 255/.08);border-color:rgb(255 255 255/.15);color:#fff}
+.footer-top{display:flex;justify-content:space-between}
+.footer-left{width:35%;display:flex;flex-direction:column}
+.footer-heading{font-size:1rem;font-weight:500;margin-bottom:1.5rem}
+.footer-input-group{display:flex;background:rgb(255 255 255/.6);border-radius:2rem;padding:.3rem;margin-bottom:1rem;border:1px solid rgb(0 0 0/.1);max-width:22rem}
+body.night .footer-input-group{background:rgb(255 255 255/.1);border-color:rgb(255 255 255/.15)}
+.footer-input{flex:1;background:transparent;border:none;outline:none;padding-left:1rem;font-family:var(--face);font-size:.9rem;color:inherit}
+.footer-submit{background:#000;color:#fff;border:none;border-radius:2rem;padding:.6rem 1.5rem;font-family:var(--face);cursor:pointer;transition:transform .2s}
+body.night .footer-submit{background:#fff;color:#000}
+.footer-submit:hover{transform:scale(1.05)}
+.footer-subtext{font-size:.75rem;opacity:.6;line-height:1.4;max-width:22rem}
+.footer-right{display:flex;gap:5rem;padding-right:2rem}
+.footer-col{display:flex;flex-direction:column;gap:1rem}
+.footer-col-title{font-size:.9rem;font-weight:500;margin-bottom:.5rem}
+.footer-col a{opacity:.7;font-size:var(--raw-text-small);transition:opacity .2s}
+.footer-col a:hover{opacity:1}
+.footer-line{height:1px;background:rgb(0 0 0/.1);margin-top:3rem;margin-bottom:1.5rem}
+body.night .footer-line{background:rgb(255 255 255/.15)}
+.footer-bottom{text-align:center;font-size:.8rem;opacity:.6}
+.words-container{position:fixed;top:0;left:0;width:100%;height:100vh;perspective:1500px;z-index:2;pointer-events:none}
+.flying-word{position:absolute;top:50%;left:50%;font-weight:400;font-size:var(--raw-text-word);margin:0;padding:0 .2em;opacity:0;white-space:nowrap;transform:translate3d(-50%,-50%,0) rotateY(0deg)}
+.flying-word .char{display:inline-block;padding:0 .15em;margin:0 -.15em}
+.glass-container{position:fixed;bottom:0;left:0;width:100%;height:100vh;background:rgb(255 255 255/.15);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-top:1px solid rgb(255 255 255/.4);z-index:10;transform:translateY(100vh);pointer-events:none}
+.glass-gradient-wrapper{position:absolute;top:50%;left:50%;width:calc(100% - 8rem);height:calc(100% - 8rem);transform:translate(-50%,-50%) scale(.65);overflow:hidden;pointer-events:auto}
+.glass-gradient-img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:1;opacity:.5}
+.gradient-content{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;padding:2rem;display:flex;flex-direction:column;justify-content:space-between;color:var(--ink)}
+.gc-top-left{font-size:var(--raw-text-title);font-weight:200;line-height:1.1;letter-spacing:-.02em;white-space:nowrap}
+.gc-bottom{display:flex;justify-content:space-between;align-items:flex-end}
+.gc-bottom-left{font-size:14px;font-weight:400;opacity:.8}
+.gc-bottom-right{display:flex;gap:3.75rem;align-items:flex-end}
+.stat-col{position:relative;padding-left:20px;display:flex;flex-direction:column;gap:16px}
+.stat-col-tall{margin-bottom:120px}
+.stat-col::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,rgb(0 0 0/0),rgb(0 0 0/.2) 10%,rgb(0 0 0/.2) 90%,rgb(0 0 0/0))}
+.stat-col-tall::before{bottom:-120px}
+.stat-num{font-size:max(42px,5.5vw);font-weight:200;line-height:1}
+.stat-desc{font-size:13px;line-height:1.5;opacity:.85}
+.stat-sub{opacity:.5;font-size:11px}
+.stat-btn{width:44px;height:44px;border-radius:50%;background:rgb(0 0 0/.05);display:flex;align-items:center;justify-content:center;margin-top:8px;cursor:pointer;transition:background .2s;border:1px solid rgb(0 0 0/.1)}
+.stat-btn:hover{background:rgb(0 0 0/.15)}
+/* ═════ PRELOADER — the odometer ═════ */
+#preloader{position:fixed;top:0;left:0;width:100%;height:100vh;z-index:9999;pointer-events:none;transition:opacity 1s ease;background:var(--page)}
+.odo{position:absolute;top:var(--raw-top);left:var(--raw-inset);font-weight:200;font-size:4rem;letter-spacing:-.02em;line-height:1;display:flex;align-items:flex-start}
+.odo-win{height:4rem;overflow:hidden;position:relative;width:6.5rem;display:inline-block;vertical-align:top}
+#odometer-numbers{position:absolute;top:0;left:0;width:100%;transition:transform .05s linear;text-align:center}
+#odometer-numbers div{height:4rem;line-height:4rem}
+/* ═════ PHONE ═════ */
+@media (max-width:768px){
+  .hero-title{white-space:normal;font-size:2.4rem;right:var(--raw-inset)}
+  .hero-info-block{width:auto;right:var(--raw-inset)}
+  .scroll-title-container h3,.feature-title{white-space:normal;font-size:2.2rem}
+  .gc-top-left{white-space:normal;font-size:1.6rem}
+  .glass-gradient-wrapper{width:calc(100% - 2rem);height:calc(100% - 6rem);transform:translate(-50%,-50%) scale(.9)}
+  .gc-bottom{flex-direction:column;align-items:flex-start;gap:1.5rem}
+  .gc-bottom-right{gap:1.5rem}.stat-col-tall{margin-bottom:0}.stat-col-tall::before{bottom:0}
+  .footer-top{flex-direction:column;gap:2rem}.footer-left{width:100%}.footer-right{flex-wrap:wrap;gap:2rem;padding:0}
+  .phase5-title-right{bottom:calc(var(--raw-top) + 10rem)}.phase5-desc-left{max-width:60%}
+  .phase5-container .swatches{bottom:calc(var(--raw-top) + 11rem)}
+  .phase6-title{white-space:normal;font-size:2.4rem}
+  .flying-word{font-size:22vw}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<!-- PRELOADER ODOMETER -->
+<div id="preloader"><div class="odo">[&nbsp;<div class="odo-win"><div id="odometer-numbers"></div></div>&nbsp;/ 100 ]</div></div>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+<h1 class="hero-title ink" id="animated-hero-title">The ring that<br><span class="hero-subtitle">reads the night</span></h1>
+<canvas id="fg" aria-label="Halo, a smart ring, turning; drag to spin it"></canvas>
+<canvas id="read" aria-hidden="true"></canvas>
+
+<a class="hero-logo ink preload-hidden reveal-anim from-top" href="#top"><i aria-hidden="true"></i>Halo</a>
+<div class="hero-nav ink preload-hidden reveal-anim from-top">
+  <a data-to="0.17">sleep <span class="nav-arrow">↗</span></a>
+  <a data-to="0.56">inside <span class="nav-arrow">↗</span></a>
+  <a data-to="0.84">colours <span class="nav-arrow">↗</span></a>
+  <a data-to="1.0">pre-order <span class="nav-arrow">↗</span></a>
+</div>
+<div class="hero-info-block ink preload-hidden reveal-anim from-bottom">
+  <div class="hi-top"><span>( A )</span><span>[ 001 /004 ]</span></div>
+  <div class="hi-text">Titanium outside, three optical sensors in, seven days on a charge. It weighs four grams and it knows how you slept before you do.</div>
+  <a href="#" class="hi-btn" data-to="1.0">PRE-ORDER — £299</a>
+</div>
+
+<div class="scroll-content-wrapper ink">
+  <div class="scroll-title-container" id="scroll-title">
+    <h3 class="animated-title flow-title">Seven days on one charge,<br>four grams on a finger,<br><span style="font-weight:500">and every night read.</span></h3>
+  </div>
+  <div class="clients-container">
+    <div class="clients-subtitle">It measures</div>
+    <div class="clients-line"></div>
+    <div class="marquee-container"><div class="marquee-content" id="marquee"></div></div>
+  </div>
+  <div class="feature-container" style="align-items:flex-end;padding-right:var(--raw-inset);padding-left:var(--raw-inset)">
+    <h3 class="feature-title animated-title flow-title" style="text-align:right">Nothing to charge at night,<br>nothing on your wrist,<br><span style="font-weight:500">nothing to look at</span></h3>
+  </div>
+</div>
+
+<div class="phase4-container ink" id="phase4-container">
+  <div class="split-feature-container">
+    <div class="hi-top" style="width:100%;min-width:15rem;max-width:20rem;margin-bottom:0"><span>( B )</span><span>[ 002 /004 ]</span></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-start">
+      <div class="split-top" style="text-align:left;display:inline-block">
+        <span class="pill-badge">Inside the shell</span>
+        <h3 class="feature-title animated-title" id="phase4-title" style="text-align:left;margin-top:1.5rem">A flex board, a cell,<br><span style="font-weight:500">three lights and a lens</span></h3>
+        <div class="clients-line" style="margin:3rem 0;width:100%"></div>
+      </div>
+      <div class="split-bottom" style="align-items:flex-start">
+        <div class="hi-text" style="text-align:left;max-width:30rem">The board wraps the inside of the ring. Two green LEDs and one infrared read the blood under the skin four hundred times a second; a thermistor reads the finger; the cell takes the rest of the room. Nothing moves, so nothing wears.</div>
+        <a href="#" class="hi-btn" data-to="0.62" style="margin-top:1.5rem;text-transform:uppercase">SEE THE TEARDOWN</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="words-container ink">
+  <div class="flying-word" id="word1"><span class="char">S</span><span class="char">l</span><span class="char">e</span><span class="char">e</span><span class="char">p</span></div>
+  <div class="flying-word" id="word2"><span class="char">R</span><span class="char">e</span><span class="char">a</span><span class="char">d</span><span class="char">y</span></div>
+  <div class="flying-word" id="word3"><span class="char">R</span><span class="char">e</span><span class="char">s</span><span class="char">t</span></div>
+</div>
+
+<div class="glass-container" id="glass-container">
+  <div id="glass-gradient" class="glass-gradient-wrapper">
+    <img src="assets/hand.webp" class="glass-gradient-img" alt="">
+    <div class="gradient-content">
+      <div class="gc-top-left animated-title" id="phase3-title">Every night is a reading,<br>every morning a number</div>
+      <div class="gc-bottom">
+        <div class="gc-bottom-left">What it gives back</div>
+        <div class="gc-bottom-right">
+          <div class="stat-col stat-col-tall"><div class="stat-num">7 days</div><div class="stat-desc">on one charge<br><span class="stat-sub">*eight, if you skip the workouts</span></div><div class="stat-btn">→</div></div>
+          <div class="stat-col"><div class="stat-num">99.7%</div><div class="stat-desc">heart-rate agreement<br>with a chest ECG</div><div class="stat-btn">→</div></div>
+          <div class="stat-col"><div class="stat-num">4 g</div><div class="stat-desc">on your finger<br><span class="stat-sub">*titanium, size 6 to 13</span></div><div class="stat-btn">→</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="phase5-container ink" id="phase5-container">
+  <div class="hi-top phase5-label-right"><span>( C )</span><span>[ 003 /004 ]</span></div>
+  <h3 class="feature-title phase5-title-left animated-title" id="phase5-title-1">Titanium. Gold. Graphite.</h3>
+  <div class="hi-text phase5-desc-left">Brushed grade-5 titanium, a PVD gold, a matte graphite. The same ring under each, the same reading every morning.</div>
+  <div class="swatches" role="radiogroup" aria-label="Colour">
+    <button class="sw" data-c="0" aria-pressed="true" style="--c:#c9ccd1" aria-label="Titanium"></button>
+    <button class="sw" data-c="1" aria-pressed="false" style="--c:#d4b273" aria-label="Gold"></button>
+    <button class="sw" data-c="2" aria-pressed="false" style="--c:#3a3d42" aria-label="Graphite"></button>
+  </div>
+  <h3 class="feature-title phase5-title-right animated-title" id="phase5-title-2">Chosen for<br><span style="font-weight:500">every hand</span></h3>
+</div>
+
+<div class="phase6-container ink" id="phase6-container">
+  <h3 class="phase6-title animated-title" id="phase6-title">Wear the<br><span style="font-weight:400">night</span></h3>
+</div>
+
+<div class="phase6-footer-wrapper" id="phase6-footer">
+  <div class="glass-footer">
+    <div class="footer-top">
+      <div class="footer-left">
+        <h2 style="margin:0 0 2rem;font-weight:500;font-size:1.5rem;letter-spacing:-.02em">Halo</h2>
+        <div class="footer-heading">Pre-orders open in October. Leave an email.</div>
+        <form class="footer-input-group" onsubmit="return false"><input type="email" placeholder="Enter your email" class="footer-input" aria-label="Email"><button class="footer-submit" type="submit">Submit</button></form>
+        <div class="footer-subtext">By subscribing you agree to our Privacy Policy and provide consent to receive updates from Halo.</div>
+      </div>
+      <div class="footer-right">
+        <div class="footer-col"><div class="footer-col-title">Ring</div><a href="#">Sizing</a><a href="#">Colours</a><a href="#">Charger</a></div>
+        <div class="footer-col"><div class="footer-col-title">Learn</div><a href="#">Sleep science</a><a href="#">Accuracy</a><a href="#">Journal</a></div>
+        <div class="footer-col"><div class="footer-col-title">About</div><a href="#">Company</a><a href="#">Careers</a><a href="#">Contact</a></div>
+        <div class="footer-col"><div class="footer-col-title">Legal</div><a href="#">Terms</a><a href="#">Privacy</a></div>
+      </div>
+    </div>
+    <div class="footer-line"></div>
+    <div class="footer-bottom">© 2026 Halo. Every asset on this page was generated for it; the ring is geometry.</div>
+  </div>
+</div>
+
+<script type="module">
+/* ═════ HALO — script.
+   · clarix's page: one long scroll, two fixed canvases with the hero title between them, six
+     phases driven by scroll progress, fixed overlays that fade and slide in on their phase, the
+     odometer preloader, the char-mask reveals.
+   · The subject is geometry: a ring swept from its own cross-section by a lathe, three sensor
+     domes on the inner face, a flex board and a cell INSIDE it that a clipping plane opens up in
+     phase four. The page goes to night in phase five and a canvas over the scene draws the ring's
+     readings around it — the heart trace, the sleep arcs, the score — from the same clock the
+     sensors pulse to.
+   ═════ */
+import * as THREE from 'three';
+const $ = (s, r = document) => r.querySelector(s); const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp01 = v => Math.max(0, Math.min(1, v));
+const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const win = (a, b, c, d, x) => sstep(a, b, x) * (1 - sstep(c, d, x));
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MOBILE = innerWidth < 768;
+const TOUCH = matchMedia('(hover: none)').matches;
+const subs = new Set(); let raf = 0;
+function frame(t) { raf = requestAnimationFrame(frame); for (const s of [...subs]) { try { s(t); } catch (e) { console.error('[ticker]', e); } } }
+const tick = fn => { subs.add(fn); if (!raf) raf = requestAnimationFrame(frame); return () => subs.delete(fn); };
+
+/* ═══════════ scroll progress, smoothed the way lenis would ═══════════ */
+let p = 0, pTarget = 0;
+const readScroll = () => { pTarget = clamp01(scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)); };
+addEventListener('scroll', readScroll, { passive: true }); readScroll();
+$$('[data-to]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); scrollTo({ top: +a.dataset.to * (document.documentElement.scrollHeight - innerHeight), behavior: REDUCE ? 'auto' : 'smooth' }); }));
+
+/* ═══════════ the char-mask reveal — clarix's ═══════════ */
+function maskChars(el) {
+  const nodes = [...el.childNodes]; el.textContent = ''; const chars = [];
+  const push = (text, parent) => { for (const ch of text) { if (ch === ' ') { parent.appendChild(document.createTextNode(' ')); continue; } const m = document.createElement('span'); m.className = 'char-mask'; const c = document.createElement('span'); c.className = 'hero-char'; c.textContent = ch; m.appendChild(c); parent.appendChild(m); chars.push(c); } };
+  for (const n of nodes) {
+    if (n.nodeType === 3) push(n.textContent, el);
+    else if (n.tagName === 'BR') el.appendChild(n);
+    else { const s = document.createElement(n.tagName.toLowerCase()); s.className = n.className; s.style.cssText = n.style.cssText; push(n.textContent, s); el.appendChild(s); }
+  }
+  return chars;
+}
+/* a title is ARMED (its letters take the blur filter) only for the length of its own reveal */
+const armOf = chars => chars[0]?.closest('.animated-title, .hero-title');
+const revealChars = (chars, stagger = 30, base = 0) => { const a = armOf(chars); a?.classList.add('armed'); chars.forEach((c, i) => setTimeout(() => c.classList.add('revealed'), base + i * stagger)); setTimeout(() => a?.classList.remove('armed'), base + chars.length * stagger + 1800); };
+const hideChars = chars => chars.forEach(c => c.classList.remove('revealed'));
+
+/* ═══════════ THE RING ═══════════ */
+const COLOURS = [
+  { name: 'Titanium', color: 0xc9ccd1, rough: 0.30, aniso: 0.6 },
+  { name: 'Gold', color: 0xd4b273, rough: 0.22, aniso: 0.4 },
+  { name: 'Graphite', color: 0x3a3d42, rough: 0.36, aniso: 0.5 },
+];
+let colour = 0, sceneReady = false;
+const fg = $('#fg'), bg = $('#bg'), read = $('#read');
+const renderer = new THREE.WebGLRenderer({ canvas: fg, antialias: true, alpha: true, premultipliedAlpha: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, MOBILE ? 1.75 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.localClippingEnabled = true;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, 1, 400); camera.position.set(0, 0, 95);
+const group = new THREE.Group(); scene.add(group);
+const clip = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 40);   /* keeps x ≤ c; c sweeps to open the ring */
+
+/* the shell: the cross-section, revolved. A flat inner face (the sensors sit on it), a domed outer. */
+const profile = [[9.6, -3.6], [9.6, 3.6], [10.3, 3.85], [10.95, 2.9], [11.25, 0.6], [11.25, -0.6], [10.95, -2.9], [10.3, -3.85], [9.6, -3.6]].map(([r, y]) => new THREE.Vector2(r, y));
+const shellGeo = new THREE.LatheGeometry(profile, 220); shellGeo.computeVertexNormals();
+const shellMat = new THREE.MeshPhysicalMaterial({ color: COLOURS[0].color, metalness: 1, roughness: COLOURS[0].rough, side: THREE.DoubleSide, clippingPlanes: [clip], clearcoat: 0.15, clearcoatRoughness: 0.4, envMapIntensity: 1.2 });
+const shell = new THREE.Mesh(shellGeo, shellMat); group.add(shell);
+/* inside: the flex board, the cell, a few components — invisible until the cut */
+const inner = new THREE.Group(); group.add(inner);
+const pcb = new THREE.Mesh(new THREE.LatheGeometry([[9.72, -2.8], [9.72, 2.8], [9.98, 2.8], [9.98, -2.8], [9.72, -2.8]].map(([r, y]) => new THREE.Vector2(r, y)), 220), new THREE.MeshStandardMaterial({ color: 0x1f7a3f, roughness: 0.55, metalness: 0.1, clippingPlanes: [clip], side: THREE.DoubleSide }));
+inner.add(pcb);
+const cell = new THREE.Mesh(new THREE.LatheGeometry([[10.05, -2.4], [10.05, 2.4], [10.85, 2.4], [10.85, -2.4], [10.05, -2.4]].map(([r, y]) => new THREE.Vector2(r, y)), 90, Math.PI * 0.55, Math.PI * 0.9), new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.45, metalness: 0.6, clippingPlanes: [clip], side: THREE.DoubleSide }));
+inner.add(cell);
+for (let i = 0; i < 9; i++) {
+  const a = Math.PI * 1.55 + i * 0.28, r = 10.45;
+  const c = new THREE.Mesh(new THREE.BoxGeometry(0.7 + (i % 3) * 0.3, 0.35, 0.45), new THREE.MeshStandardMaterial({ color: i % 2 ? 0x101214 : 0x8a8f96, roughness: 0.4, metalness: 0.5, clippingPlanes: [clip] }));
+  c.position.set(Math.cos(a) * r, (i % 2 ? 1.1 : -1.1), Math.sin(a) * r); c.lookAt(0, c.position.y, 0); inner.add(c);
+}
+/* the sensors: three domes on the inner face, and they pulse */
+const sensorMat = new THREE.MeshStandardMaterial({ color: 0x0b1a10, emissive: 0x4cff7a, emissiveIntensity: 0.4, roughness: 0.25, metalness: 0.1, clippingPlanes: [clip] });
+const sensors = [0, 1, 2].map(i => {
+  const a = i * Math.PI * 2 / 3 + 0.4;
+  const s = new THREE.Mesh(new THREE.SphereGeometry(0.72, 28, 18), sensorMat);
+  s.scale.set(1, 1, 0.42); s.position.set(Math.cos(a) * 9.45, 0.15, Math.sin(a) * 9.45); s.lookAt(0, 0.15, 0); group.add(s); return s;
+});
+/* the room the titanium reflects: a white cove with one softbox and a dark card, painted */
+function studioEnv() {
+  const cv = document.createElement('canvas'); cv.width = 1024; cv.height = 512; const c = cv.getContext('2d');
+  const g = c.createLinearGradient(0, 0, 0, 512); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#e9ebef'); g.addColorStop(0.8, '#b9bdc4'); g.addColorStop(1, '#6f747c');
+  c.fillStyle = g; c.fillRect(0, 0, 1024, 512);
+  c.fillStyle = 'rgba(255,255,255,1)'; c.beginPath(); c.roundRect(140, 40, 420, 150, 50); c.fill();
+  c.fillStyle = 'rgba(20,22,26,.9)'; c.beginPath(); c.roundRect(720, 180, 220, 160, 20); c.fill();   /* the dark card gives the brush its contrast */
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.roundRect(60, 300, 260, 60, 30); c.fill();
+  const tex = new THREE.CanvasTexture(cv); tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+  const pm = new THREE.PMREMGenerator(renderer); pm.compileEquirectangularShader(); const env = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose(); return env;
+}
+scene.environment = studioEnv();
+const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(-30, 50, 60); scene.add(key);
+const rim = new THREE.DirectionalLight(0xdfe8ff, 1.0); rim.position.set(40, 20, -60); scene.add(rim);
+const fill = new THREE.HemisphereLight(0xffffff, 0x9aa0a8, 0.5); scene.add(fill);
+
+const fit = () => { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); bg.width = 96; bg.height = 54; read.width = w * Math.min(devicePixelRatio, 2); read.height = h * Math.min(devicePixelRatio, 2); };
+addEventListener('resize', fit); fit();
+renderer.compile(scene, camera); renderer.render(scene, camera); sceneReady = true;
+
+/* ═══════════ the pointer: tilt, and a drag that spins ═══════════ */
+const tilt = { x: 0, y: 0 }, tiltTo = { x: 0, y: 0 };
+let dragging = false, lastX = 0, spinV = 0, spin = 0;
+if (!TOUCH) addEventListener('pointermove', e => { tiltTo.y = (e.clientX / innerWidth - 0.5) * 2; tiltTo.x = (e.clientY / innerHeight - 0.5) * 2; if (dragging) { spinV = (e.clientX - lastX) * 0.01; spin += spinV; lastX = e.clientX; } }, { passive: true });
+fg.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; fg.setPointerCapture(e.pointerId); });
+addEventListener('pointerup', () => { dragging = false; });
+
+/* ═══════════ the colours ═══════════ */
+const targetCol = new THREE.Color(COLOURS[0].color); let targetRough = COLOURS[0].rough;
+$$('.sw').forEach(b => b.addEventListener('click', () => { colour = +b.dataset.c; $$('.sw').forEach(x => x.setAttribute('aria-pressed', String(+x.dataset.c === colour))); targetCol.set(COLOURS[colour].color); targetRough = COLOURS[colour].rough; }));
+
+/* ═══════════ the phases ═══════════ */
+const glass = $('#glass-container'), glassIn = $('#glass-gradient'), ph4 = $('#phase4-container'), ph5 = $('#phase5-container'), ph6 = $('#phase6-container'), foot = $('#phase6-footer');
+const words = [$('#word1'), $('#word2'), $('#word3')];
+const titles = { p3: maskChars($('#phase3-title')), p4: maskChars($('#phase4-title')), p5a: maskChars($('#phase5-title-1')), p5b: maskChars($('#phase5-title-2')), p6: maskChars($('#phase6-title')) };
+const shown = {};
+const showOnce = (k, chars) => { if (!shown[k]) { shown[k] = true; revealChars(chars, 24); } };
+const hideAgain = (k, chars) => { if (shown[k]) { shown[k] = false; hideChars(chars); } };
+/* the scroll-content titles reveal as they pass */
+for (const t of $$('.flow-title')) { const chars = maskChars(t); const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { io.disconnect(); revealChars(chars, 22); } }, { threshold: 0.2 }); io.observe(t); }
+if (REDUCE) Object.values(titles).forEach(c => c.forEach(x => x.classList.add('revealed')));
+
+/* the reading, drawn around the ring on a 2-D canvas */
+const rctx = read.getContext('2d');
+const HR = 52 / 60;   /* beats per second */
+function ecg(t) {   /* one beat, t in 0..1: a P, the QRS spike, a T */
+  const g = (x, c, w) => Math.exp(-((x - c) * (x - c)) / (w * w));
+  return 0.10 * g(t, 0.18, 0.04) - 0.12 * g(t, 0.34, 0.012) + 1.0 * g(t, 0.37, 0.014) - 0.22 * g(t, 0.40, 0.012) + 0.22 * g(t, 0.62, 0.06);
+}
+function drawReading(now, alpha, cx, cy, R, night) {
+  const W = read.width, H = read.height, d = W / innerWidth;
+  rctx.clearRect(0, 0, W, H);
+  if (alpha <= 0.001) return;
+  rctx.save(); rctx.scale(d, d); rctx.globalAlpha = alpha;
+  const t = now / 1000;
+  const ink = night ? 'rgba(255,255,255,' : 'rgba(0,0,0,';
+  /* the track */
+  rctx.strokeStyle = ink + '.18)'; rctx.lineWidth = 1; rctx.beginPath(); rctx.arc(cx, cy, R * 1.5, 0, Math.PI * 2); rctx.stroke();
+  /* the heart trace wrapped on the circle, sweeping */
+  rctx.strokeStyle = '#4cff7a'; rctx.lineWidth = 1.6; rctx.beginPath();
+  const N = 420, span = Math.PI * 1.35, a0 = -Math.PI * 0.5 - span / 2 + Math.sin(t * 0.2) * 0.2;
+  for (let i = 0; i <= N; i++) {
+    const k = i / N, a = a0 + k * span;
+    const beat = (k * 4.2 + t * HR) % 1;
+    const r = R * 1.5 + ecg(beat) * R * 0.28;
+    const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+    if (i) rctx.lineTo(x, y); else rctx.moveTo(x, y);
+  }
+  rctx.stroke();
+  /* the sleep arcs — deep, light, REM, awake — as four bands on a second ring */
+  const bands = [[0.00, 0.22, '.85'], [0.22, 0.55, '.45'], [0.55, 0.82, '.65'], [0.82, 1.0, '.2']];
+  for (const [s, e, o] of bands) { rctx.strokeStyle = ink + o + ')'; rctx.lineWidth = 6; rctx.beginPath(); rctx.arc(cx, cy, R * 1.72, Math.PI * 0.75 + s * Math.PI * 1.5, Math.PI * 0.75 + e * Math.PI * 1.5 - 0.02); rctx.stroke(); }
+  /* the numbers */
+  rctx.fillStyle = ink + '.9)'; rctx.font = '200 44px Sarabun, sans-serif'; rctx.textAlign = 'left';
+  const bpm = 52 + Math.round(Math.sin(t * 0.13) * 1.5);
+  rctx.fillText(String(bpm), cx + R * 1.85, cy - R * 0.9);
+  rctx.font = '400 12px Sarabun, sans-serif'; rctx.fillText('BPM · RESTING', cx + R * 1.85, cy - R * 0.9 + 20);
+  rctx.font = '200 44px Sarabun, sans-serif'; rctx.fillText('84', cx + R * 1.85, cy + R * 0.9); rctx.font = '400 12px Sarabun, sans-serif'; rctx.fillText('READINESS', cx + R * 1.85, cy + R * 0.9 + 20);
+  rctx.textAlign = 'right'; rctx.font = '200 44px Sarabun, sans-serif'; rctx.fillText('7h 42', cx - R * 1.85, cy - R * 0.9); rctx.font = '400 12px Sarabun, sans-serif'; rctx.fillText('SLEEP · 1h 58 DEEP', cx - R * 1.85, cy - R * 0.9 + 20);
+  rctx.font = '200 44px Sarabun, sans-serif'; rctx.fillText('+0.2°', cx - R * 1.85, cy + R * 0.9); rctx.font = '400 12px Sarabun, sans-serif'; rctx.fillText('SKIN TEMPERATURE', cx - R * 1.85, cy + R * 0.9 + 20);
+  rctx.restore();
+}
+/* the background: a pale field, or the night */
+const bctx = bg.getContext('2d');
+function drawBg(night, gx, gy) {
+  const W = 96, H = 54;
+  bctx.fillStyle = night ? '#07090d' : '#ffffff'; bctx.fillRect(0, 0, W, H);
+  const g = bctx.createRadialGradient(gx * W, gy * H, 2, gx * W, gy * H, W * 0.55);
+  if (night) { g.addColorStop(0, 'rgba(76,255,122,.16)'); g.addColorStop(1, 'rgba(76,255,122,0)'); }
+  else { g.addColorStop(0, 'rgba(226,229,236,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); }
+  bctx.fillStyle = g; bctx.fillRect(0, 0, W, H);
+}
+
+let started = false, t0 = 0, night = false, envMix = 1;
+const pos = new THREE.Vector3(), rot = new THREE.Vector3();
+tick(now => {
+  if (!sceneReady) return;
+  p += (pTarget - p) * (REDUCE ? 1 : 0.1);
+  const t = (now - t0) / 1000;
+  /* ── the ring's place and attitude per phase ── */
+  const P1 = 1 - sstep(0.08, 0.16, p), P2 = win(0.08, 0.16, 0.36, 0.42, p), P3 = win(0.36, 0.42, 0.53, 0.58, p), P4 = win(0.53, 0.58, 0.68, 0.72, p), P5 = win(0.68, 0.72, 0.82, 0.86, p), P6 = sstep(0.82, 0.86, p);
+  pos.set(0, 0, 0); rot.set(0, 0, 0);
+  const add = (w, x, y, z, rx, ry) => { pos.x += w * x; pos.y += w * y; pos.z += w * z; rot.x += w * rx; rot.y += w * ry; };
+  const slow = REDUCE ? 0 : t * 0.22;
+  add(P1, MOBILE ? 0 : 9, MOBILE ? 6 : -1, 0, 0.35, slow);
+  const side = MOBILE ? 0 : 10 - 21 * sstep(0.13, 0.17, p);   /* right of the first title, then left of the right-aligned one */
+  add(P2, side, MOBILE ? 6 : 0, 0, 1.25, slow * 0.6);
+  add(P3, 0, 0, -10, 0.6, slow * 0.5);
+  add(P4, MOBILE ? 0 : -6, MOBILE ? 8 : 0, 10, 0.9, Math.PI * 0.5 + slow * 0.15);
+  add(P5, 0, 0, 0, 1.35, slow * 0.3);
+  add(P6, 0, MOBILE ? 8 : -4, -14, 0.4, slow);
+  group.position.copy(pos); tilt.x += (tiltTo.x - tilt.x) * 0.06; tilt.y += (tiltTo.y - tilt.y) * 0.06;
+  if (!dragging) { spinV *= 0.94; spin += spinV; }
+  group.rotation.set(rot.x + tilt.x * 0.12, rot.y + tilt.y * 0.2 + spin, 0);
+  /* ── the cut: the plane sweeps through the ring in phase four ── */
+  const cut = sstep(0.57, 0.64, p) * (1 - sstep(0.69, 0.73, p));
+  clip.constant = 40 - cut * 43;
+  /* ── night ── */
+  const nightMix = win(0.68, 0.72, 0.87, 0.91, p);
+  if ((nightMix > 0.5) !== night) { night = nightMix > 0.5; document.body.classList.toggle('night', night); }
+  envMix += ((1 - nightMix * 0.88) - envMix) * 0.1;
+  shellMat.envMapIntensity = 1.2 * envMix; key.intensity = 1.6 * envMix + 0.15; fill.intensity = 0.5 * envMix;
+  /* the sensors pulse at the resting heart rate, harder in the night */
+  const beat = (t * HR) % 1, pulse = Math.exp(-beat * beat * 40) + 0.35 * Math.exp(-(beat - 0.22) * (beat - 0.22) * 60);
+  sensorMat.emissiveIntensity = 0.35 + pulse * (0.9 + nightMix * 2.6);
+  /* colour */
+  shellMat.color.lerp(targetCol, 0.08); shellMat.roughness += (targetRough - shellMat.roughness) * 0.08;
+  /* ── the DOM phases ── */
+  const gUp = sstep(0.36, 0.42, p) * (1 - sstep(0.53, 0.58, p));
+  glass.style.transform = `translateY(${((1 - gUp) * 100).toFixed(2)}vh)`;
+  glassIn.style.transform = `translate(-50%,-50%) scale(${(0.65 + 0.3 * sstep(0.40, 0.50, p) * (1 - sstep(0.53, 0.58, p))).toFixed(3)})`;
+  if (gUp > 0.6) showOnce('p3', titles.p3); else if (gUp < 0.05) hideAgain('p3', titles.p3);
+  const f4 = win(0.56, 0.60, 0.68, 0.71, p);
+  ph4.style.opacity = f4.toFixed(3); ph4.style.transform = `translateY(${((1 - f4) * 50).toFixed(1)}px)`;
+  if (f4 > 0.6) showOnce('p4', titles.p4); else if (f4 < 0.05) hideAgain('p4', titles.p4);
+  /* the flying words: each owns a third of phase five and flies through in perspective */
+  words.forEach((w, i) => {
+    const a = 0.69 + i * 0.027, b = a + 0.042;
+    const k = clamp01((p - a) / (b - a));
+    const o = Math.sin(k * Math.PI);
+    w.style.opacity = (o * 0.9).toFixed(3);
+    w.style.transform = `translate3d(-50%,-50%,${((k - 0.5) * 1400).toFixed(0)}px) rotateY(${((0.5 - k) * 70).toFixed(1)}deg)`;
+  });
+  const f5 = win(0.83, 0.86, 0.91, 0.94, p);
+  ph5.style.opacity = f5.toFixed(3);
+  if (f5 > 0.6) { showOnce('p5a', titles.p5a); showOnce('p5b', titles.p5b); } else if (f5 < 0.05) { hideAgain('p5a', titles.p5a); hideAgain('p5b', titles.p5b); }
+  const f6 = sstep(0.90, 0.94, p);
+  ph6.style.opacity = f6.toFixed(3);
+  if (f6 > 0.6) showOnce('p6', titles.p6); else if (f6 < 0.05) hideAgain('p6', titles.p6);
+  foot.style.transform = `translateY(${((1 - sstep(0.93, 1.0, p)) * 100).toFixed(2)}vh)`;
+  /* ── draw ── */
+  const v = group.position.clone().project(camera);
+  const cx = (v.x + 1) / 2 * innerWidth, cy = (1 - v.y) / 2 * innerHeight;
+  const dist = camera.position.z - group.position.z, vis = 2 * dist * Math.tan(15 * Math.PI / 180);
+  const R = 11.25 / vis * innerHeight;
+  drawBg(night, cx / innerWidth, cy / innerHeight);
+  drawReading(now, win(0.775, 0.805, 0.86, 0.89, p), cx, cy, R, night);
+  renderer.render(scene, camera);
+});
+
+/* ═══════════ the marquee ═══════════ */
+{
+  const items = ['Sleep stages', 'Resting heart rate', 'HRV', 'Skin temperature', 'Blood oxygen', 'Respiratory rate', 'Steps', 'Readiness'];
+  $('#marquee').innerHTML = [...items, ...items].map(s => `<span>${s}</span>`).join('');
+}
+
+/* ═══════════ THE ODOMETER — [ 000 / 100 ], then the reveal ═══════════ */
+{
+  const pre = $('#preloader'), col = $('#odometer-numbers');
+  col.innerHTML = Array.from({ length: 101 }, (_, i) => `<div>${String(i).padStart(3, '0')}</div>`).join('');
+  const heroChars = maskChars($('#animated-hero-title'));
+  const reveal = () => {
+    $$('.reveal-anim').forEach(el => el.classList.remove('preload-hidden'));
+    revealChars(heroChars, 30, 200);
+    started = true; t0 = performance.now();
+  };
+  if (REDUCE) { pre.remove(); heroChars.forEach(c => c.classList.add('revealed')); $$('.reveal-anim').forEach(el => el.classList.remove('preload-hidden')); started = true; }
+  else {
+    let v = 0, done = false; const tStart = performance.now();
+    const off = tick(now => {
+      const gate = sceneReady && document.fonts.status === 'loaded' && now - tStart > 1300;
+      const to = gate ? 100 : 86;
+      v += (to - v) * (gate ? 0.09 : 0.03);
+      const n = Math.round(v);
+      col.style.transform = `translateY(-${n * 4}rem)`;
+      if (!done && gate && v > 99.4) { done = true; col.style.transform = 'translateY(-400rem)'; pre.style.opacity = '0'; reveal(); setTimeout(() => { pre.remove(); off(); }, 1000); }
+    });
+  }
+  document.fonts.ready.then(() => { if (!document.fonts.check('200 1em Sarabun')) console.warn('Sarabun not resolved'); });
+}
+
+</script>
+</body>
+</html>
