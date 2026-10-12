@@ -1,0 +1,135 @@
+# ============================================================
+#  VehicleGPT — Master Configuration
+# ============================================================
+
+system:
+  name: "VehicleGPT"
+  version: "1.0.0"
+  log_level: "INFO"           # DEBUG | INFO | WARNING | ERROR
+  log_dir: "./logs"
+
+# ─────────────────────────────────────────
+#  INFERENCE — LLM Settings
+# ─────────────────────────────────────────
+inference:
+  backend: "ollama"           # "ollama" | "llamacpp"
+  ollama_url: "http://localhost:11434"
+  model_name: "vehiclegpt"    # Ollama model name (see inference/modelfile/Modelfile)
+  llamacpp_binary: "./llama-cli"
+  gguf_path: "./data/models/vehiclegpt-q4_k_m.gguf"
+
+  # Generation params — keep temp=0 for deterministic output
+  temperature: 0.0
+  top_k: 1
+  top_p: 0.1
+  repeat_penalty: 1.1
+  max_tokens: 600
+  context_size: 2048          # 2048 context window for complete conversational answers
+
+  # Grammar file for constrained decoding
+  grammar_file: "./inference/grammar/vehicle_response.gbnf"
+  use_grammar: true
+
+# ─────────────────────────────────────────
+#  RAG — Retrieval Settings
+# ─────────────────────────────────────────
+rag:
+  embedding_model: "all-MiniLM-L6-v2"   # Sentence-transformers model
+  embedding_dim: 384
+  faiss_index_path: "./data/db/faiss.index"
+  faiss_metadata_path: "./data/db/faiss_meta.json"
+  top_k_results: 5
+  max_context_tokens: 400     # Tokens to pack into LLM prompt
+
+# ─────────────────────────────────────────
+#  STORAGE — Database Settings
+# ─────────────────────────────────────────
+storage:
+  sqlite_path: "./data/db/signals.db"
+  retention_days: 28          # 4-week rolling window
+  ring_buffer_size: 3000      # Number of signals in RAM ring buffer
+  vector_rebuild_interval: 300  # Rebuild FAISS index every 5 minutes (seconds)
+
+# ─────────────────────────────────────────
+#  DATA INGESTION — Sources
+# ─────────────────────────────────────────
+ingestion:
+  # CAN Bus
+  can:
+    enabled: true
+    interface: "socketcan"    # "socketcan" on Linux, "virtual" for dev/sim
+    channel: "vcan0"          # Use "vcan0" for simulation, "can0" for real HW
+    bitrate: 500000
+    dbc_files:                # Put your .dbc files here
+      - "./data/datasets/raw/vehicle.dbc"
+    fd_enabled: false         # Set true for CAN-FD boards
+
+  # SOME/IP (stub — implement vsomeip bridge per platform)
+  someip:
+    enabled: false
+    config_file: "./data/datasets/raw/vsomeip.json"
+
+  # Android Vehicle HAL
+  vhal:
+    enabled: false
+    socket_path: "/tmp/vhal.sock"
+    signals:
+      - "PERF_VEHICLE_SPEED"
+      - "ENGINE_RPM"
+      - "FUEL_LEVEL"
+      - "EV_BATTERY_LEVEL"
+      - "GEAR_SELECTION"
+      - "HVAC_FAN_SPEED"
+
+  # QNX Log Parser
+  qnx:
+    enabled: false
+    slog_path: "/var/log/slogger2"
+    min_severity: "WARNING"
+
+  # ADAS Events (from camera / radar via CAN)
+  adas:
+    enabled: true
+    signals:
+      - "FCW_STATUS"          # Forward Collision Warning
+      - "LDW_STATUS"          # Lane Departure Warning
+      - "BSW_STATUS"          # Blind Spot Warning
+      - "AEB_STATUS"          # Auto Emergency Braking
+      - "CAMERA_FAULT"
+
+  # Simulated / Recorded Log Replay (no CARLA)
+  replay:
+    enabled: true             # Set true to replay logs instead of live CAN
+    replay_file: "./data/datasets/raw/sample_drive.csv"
+    speed_multiplier: 1.0     # 1.0 = real-time, 10.0 = 10x faster
+
+# ─────────────────────────────────────────
+#  API — REST Endpoint
+# ─────────────────────────────────────────
+api:
+  host: "0.0.0.0"
+  port: 8765
+  debug: false
+
+# ─────────────────────────────────────────
+#  TRAINING — Dataset Paths
+# ─────────────────────────────────────────
+training:
+  # ======================================================
+  #  📂 DATASET FEED LOCATION
+  #  Drop your JSONL training files into:
+  #    ./data/datasets/training/
+  #
+  #  Format: one JSON object per line:
+  #  {"instruction": "...", "input": "...", "output": "..."}
+  # ======================================================
+  dataset_dir: "./data/datasets/training"
+  output_model_dir: "./data/models"
+  base_model: "Qwen/Qwen2.5-0.5B-Instruct"
+  lora_rank: 16
+  lora_alpha: 16
+  max_seq_length: 512
+  num_epochs: 3
+  batch_size: 4
+  learning_rate: 0.0002
+  export_quantization: "q4_k_m"

@@ -1,0 +1,52 @@
+[
+  {
+    "instruction": "What is the current engine coolant temperature status?",
+    "input": "ENGINE_COOLANT_TEMP=92.4 celsius, SOURCE=CAN, SEVERITY=WARNING",
+    "output": "{\"status\": \"WARNING\", \"answer\": \"Engine coolant temperature is elevated at 92.4°C (normal threshold: 90°C). Monitor closely and avoid heavy load until it returns to normal range.\", \"severity\": \"MEDIUM\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 92.4}"
+  },
+  {
+    "instruction": "Why did the AEB system activate?",
+    "input": "AEB_STATUS=TRIGGERED at 2024-10-13T08:45:12Z, PERF_VEHICLE_SPEED=45 km/h, FCW_STATUS=ACTIVE, distance_to_obstacle=4.2m",
+    "output": "{\"status\": \"OK\", \"answer\": \"At 08:45:12 UTC, the Automatic Emergency Braking activated due to a detected obstacle at 4.2m while traveling at 45 km/h. No collision occurred.\", \"severity\": \"LOW\", \"timestamp\": \"2024-10-13T08:45:12Z\", \"active_faults\": [], \"data\": 4.2}"
+  },
+  {
+    "instruction": "What active fault codes are present?",
+    "input": "DTC_P0217=ACTIVE, DTC_B1234=STORED",
+    "output": "{\"status\": \"FAULT\", \"answer\": \"Two fault codes detected: P0217 (Engine Coolant Temperature Over Limit) is active, and B1234 is stored. Immediate service is recommended for P0217.\", \"severity\": \"HIGH\", \"timestamp\": \"\", \"active_faults\": [\"P0217\", \"B1234\"], \"data\": null}"
+  },
+  {
+    "instruction": "What is my current fuel level and estimated range?",
+    "input": "FUEL_LEVEL=12.0 %, PERF_VEHICLE_SPEED=80 km/h",
+    "output": "{\"status\": \"WARNING\", \"answer\": \"Fuel level is critically low at 12%. Refuel soon to avoid running out.\", \"severity\": \"HIGH\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 12.0}"
+  },
+  {
+    "instruction": "Is the battery voltage normal?",
+    "input": "BATTERY_VOLTAGE=11.7 V",
+    "output": "{\"status\": \"FAULT\", \"answer\": \"Battery voltage is at 11.7V, which is below the minimum healthy threshold of 12.0V. The battery may be discharging or failing — check the alternator and battery health.\", \"severity\": \"HIGH\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 11.7}"
+  },
+  {
+    "instruction": "What is the tire pressure status?",
+    "input": "TIRE_PRESSURE_FL=22 kPa, TIRE_PRESSURE_FR=32 kPa, TIRE_PRESSURE_RL=31 kPa, TIRE_PRESSURE_RR=31 kPa",
+    "output": "{\"status\": \"FAULT\", \"answer\": \"Front-left tire pressure is critically low at 22 kPa (minimum: 28 kPa). Stop safely and check or replace the tire immediately.\", \"severity\": \"CRITICAL\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 22.0}"
+  },
+  {
+    "instruction": "Was there any lane departure warning this week?",
+    "input": "No historical events found matching lane departure in last 7 days.",
+    "output": "{\"status\": \"NOT_FOUND\", \"answer\": \"No lane departure warning events were recorded in the last 7 days based on available vehicle data.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "What is the current engine RPM?",
+    "input": "ENGINE_RPM=820 rpm, GEAR_SELECTION=PARK",
+    "output": "{\"status\": \"OK\", \"answer\": \"Engine is idling at 820 RPM in Park, which is within normal idle range (650–900 RPM).\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 820.0}"
+  },
+  {
+    "instruction": "Is the vehicle safe to drive?",
+    "input": "ENGINE_COOLANT_TEMP=120.0 celsius, SEVERITY=CRITICAL, DTC_P0217=ACTIVE",
+    "output": "{\"status\": \"CRITICAL\", \"answer\": \"Vehicle is NOT safe to drive. Engine coolant temperature is critically high at 120°C with fault code P0217 active. Stop the vehicle immediately and allow the engine to cool before seeking service.\", \"severity\": \"CRITICAL\", \"timestamp\": \"\", \"active_faults\": [\"P0217\"], \"data\": 120.0}"
+  },
+  {
+    "instruction": "What is my current vehicle speed?",
+    "input": "PERF_VEHICLE_SPEED=0 km/h, GEAR_SELECTION=PARK",
+    "output": "{\"status\": \"OK\", \"answer\": \"Vehicle is stationary at 0 km/h with gear in Park.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 0.0}"
+  }
+]

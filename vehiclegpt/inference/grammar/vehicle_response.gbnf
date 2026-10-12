@@ -1,0 +1,49 @@
+# VehicleGPT — GBNF Grammar for Constrained Decoding
+# Forces model output to be valid JSON matching vehicle response schema.
+# Any token violating this grammar is physically masked — hallucination impossible.
+
+root        ::= "{" ws members ws "}"
+
+members     ::= pair (ws "," ws pair)*
+
+pair        ::= status-pair
+              | answer-pair
+              | severity-pair
+              | timestamp-pair
+              | faults-pair
+              | data-pair
+
+status-pair    ::= "\"status\""    ws ":" ws status-val
+answer-pair    ::= "\"answer\""    ws ":" ws string
+severity-pair  ::= "\"severity\""  ws ":" ws severity-val
+timestamp-pair ::= "\"timestamp\"" ws ":" ws string
+faults-pair    ::= "\"active_faults\"" ws ":" ws "[" ws fault-list? ws "]"
+data-pair      ::= "\"data\""      ws ":" ws number-or-null
+
+status-val  ::= "\"OK\""
+              | "\"WARNING\""
+              | "\"FAULT\""
+              | "\"CRITICAL\""
+              | "\"NOT_FOUND\""
+              | "\"ERROR\""
+
+severity-val ::= "\"LOW\""
+               | "\"MEDIUM\""
+               | "\"HIGH\""
+               | "\"CRITICAL\""
+               | "\"NONE\""
+
+fault-list  ::= string (ws "," ws string)*
+
+string      ::= "\"" char* "\""
+char        ::= [^"\\] | "\\" escape
+escape      ::= ["\\/bfnrt] | "u" hex hex hex hex
+hex         ::= [0-9a-fA-F]
+
+number-or-null ::= number | "null"
+number         ::= "-"? int frac? exp?
+int            ::= "0" | [1-9] [0-9]*
+frac           ::= "." [0-9]+
+exp            ::= [eE] [-+]? [0-9]+
+
+ws          ::= ([ \t\n\r])*

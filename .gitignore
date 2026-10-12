@@ -20,3 +20,21 @@
 
 # vercel
 .vercel
+
+# python & vehiclegpt
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.db
+*.db-shm
+*.db-wal
+*.index
+*.gguf
+vehiclegpt/logs/
+vehiclegpt/data/db/*.db*
+

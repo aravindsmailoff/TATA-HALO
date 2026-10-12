@@ -838,46 +838,123 @@ export default function HaloCarExperience() {
       'I can answer questions about tyres, battery, fuel and range, service and oil life, coolant temperature, OBD-II fault codes, trips, and parked status. Try one of the suggested prompts or ask me directly.';
 
     let isThinking = false;
-    const addMessage = (role, text) => {
+    let vgptOnline = false;
+
+    // ── Check VehicleGPT backend connectivity ─────────────────
+    const checkBackend = async () => {
+      try {
+        const r = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: '__ping__', canData: carData }),
+        });
+        const d = await r.json();
+        vgptOnline = d._source === 'vehiclegpt';
+      } catch {
+        vgptOnline = false;
+      }
+    };
+    checkBackend();
+
+    const addMessage = (role, text, meta) => {
       const bubble = document.createElement('div');
       bubble.className = 'msg ' + role;
+      if (meta) {
+        // Rich AI response with severity badge
+        const badge = document.createElement('span');
+        badge.style.cssText = `
+          display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;
+          font-weight:600;letter-spacing:.05em;margin-bottom:6px;
+          background:${{ OK:'rgba(16,185,129,.15)', WARNING:'rgba(245,158,11,.15)', FAULT:'rgba(239,68,68,.15)', CRITICAL:'rgba(220,38,38,.2)', NOT_FOUND:'rgba(100,116,139,.15)', ERROR:'rgba(100,116,139,.15)' }[meta.status] || 'rgba(100,116,139,.15)'};
+          color:${{ OK:'#10b981', WARNING:'#f59e0b', FAULT:'#ef4444', CRITICAL:'#dc2626', NOT_FOUND:'#64748b', ERROR:'#64748b' }[meta.status] || '#64748b'};
+        `;
+        badge.textContent = meta.status || 'OK';
+        bubble.appendChild(badge);
+        bubble.appendChild(document.createElement('br'));
+        const textNode = document.createTextNode('');
+        bubble.appendChild(textNode);
+        if (meta.active_faults && meta.active_faults.length > 0) {
+          const faultLine = document.createElement('div');
+          faultLine.style.cssText = 'margin-top:6px;font-size:11px;opacity:.7;font-family:monospace;';
+          faultLine.textContent = '⚠ DTCs: ' + meta.active_faults.join(', ');
+          bubble.appendChild(faultLine);
+        }
+        if (meta._latency_ms) {
+          const lat = document.createElement('div');
+          lat.style.cssText = 'margin-top:4px;font-size:10px;opacity:.45;';
+          lat.textContent = `⚡ ${meta._latency_ms}ms · ${meta._source === 'vehiclegpt' ? 'VehicleGPT' : 'local engine'}`;
+          bubble.appendChild(lat);
+        }
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        // Typewriter effect on the text node
+        const answer = meta.answer || text;
+        let charIdx = 0;
+        const typeTimer = setInterval(() => {
+          textNode.textContent = answer.slice(0, ++charIdx);
+          chatLog.scrollTop = chatLog.scrollHeight;
+          if (charIdx >= answer.length) clearInterval(typeTimer);
+        }, 11);
+        return bubble;
+      }
       bubble.textContent = text;
       chatLog.appendChild(bubble);
       chatLog.scrollTop = chatLog.scrollHeight;
       return bubble;
     };
 
-    const askQuestion = (qText) => {
+    const askQuestion = async (qText) => {
       const query = qText.trim();
       if (!query || isThinking) return;
       isThinking = true;
       if (chatInput) chatInput.value = '';
       addMessage('u', query);
-
-      const match = responses.find(([regex]) => regex.test(query));
-      const answer = match ? match[1]() : defaultReply;
       const aiBubble = addMessage('a', 'Thinking…');
+      const t0 = Date.now();
 
-      let charIdx = 0;
-      setTimeout(() => {
-        aiBubble.textContent = '';
-        const typeTimer = setInterval(() => {
-          aiBubble.textContent = answer.slice(0, ++charIdx);
-          chatLog.scrollTop = chatLog.scrollHeight;
-          if (charIdx >= answer.length) {
-            clearInterval(typeTimer);
-            isThinking = false;
-          }
-        }, 12);
-      }, 350);
+      try {
+        const res = await fetch('/api/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, canData: carData }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          data._latency_ms = Date.now() - t0;
+          aiBubble.textContent = '';
+          aiBubble.className = 'msg a';
+          addMessage('a', '', data);
+          aiBubble.remove();
+          vgptOnline = data._source === 'vehiclegpt';
+          isThinking = false;
+          return;
+        }
+      } catch (err) {
+        // Fall through to instant local fallback
+      }
+
+      // Bulletproof local CAN fallback — zero error screen
+      const match = responses.find(([regex]) => regex.test(query));
+      const fallbackAnswer = match ? match[1]() : defaultReply;
+      aiBubble.textContent = '';
+      aiBubble.className = 'msg a';
+      addMessage('a', '', {
+        status: 'OK',
+        answer: fallbackAnswer,
+        severity: 'NONE',
+        _latency_ms: Date.now() - t0,
+        _source: 'local_engine',
+      });
+      aiBubble.remove();
+      isThinking = false;
     };
 
     const chips = [
-      'How are my tyres?',
-      'What happened overnight?',
-      'When is my next service?',
-      'Is everything okay?',
-      'Explain Tata Punch engine vitals',
+      'How does an engine work?',
+      'How are my tyres right now?',
+      'Tips for driving in heavy rain',
+      'Explain turbocharging',
+      'Is everything okay with my car?',
     ];
     if (chatChips) {
       chatChips.innerHTML = '';
@@ -898,14 +975,24 @@ export default function HaloCarExperience() {
     }
     if (chatLog) {
       chatLog.innerHTML = '';
-      addMessage('a', "Hi, I've been watching your car since you parked. Ask me anything about it.");
+      addMessage('a', "Hello! I am VehicleGPT, your conversational vehicle AI copilot. Like ChatGPT, you can chat with me about general topics, driving advice, and science, or query your car's live sensors and diagnostics!");
     }
 
+    // Randomly fluctuate live CAN signal values (simulated telemetry)
+    const fluctuate = (base, range) => +(base + (Math.random() - 0.5) * range).toFixed(1);
     let liveSec = 2;
     const liveTimer = setInterval(() => {
       liveSec = (liveSec % 5) + 1;
+      // Update live CAN data with slight fluctuations
+      carData.cool = fluctuate(89, 3);
+      carData.volt = fluctuate(12.6, 0.3);
+      carData.eco  = fluctuate(6.3, 0.4);
       const liveEl = $('#live');
-      if (liveEl) liveEl.textContent = `Live · reading the CAN bus · updated ${liveSec} s ago`;
+      if (liveEl) {
+        const icon = vgptOnline ? '🟢' : '🟡';
+        const src = vgptOnline ? 'VehicleGPT · Edge LLM' : 'Edge Engine · local';
+        liveEl.textContent = `${icon} Live · ${src} · updated ${liveSec} s ago`;
+      }
     }, 1000);
 
     /* ═══════════ ODOMETER PRELOADER ═══════════ */
@@ -1337,7 +1424,7 @@ export default function HaloCarExperience() {
                 <input
                   id="q"
                   autoComplete="off"
-                  placeholder="Ask about your Tata Punch, battery, tyres, or service…"
+                  placeholder="Ask like ChatGPT: science, driving tips, car questions, or live telemetry…"
                   aria-label="Ask about your car"
                 />
                 <button type="submit">Ask AI</button>
