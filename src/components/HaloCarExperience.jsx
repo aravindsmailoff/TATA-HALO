@@ -846,10 +846,10 @@ export default function HaloCarExperience() {
         const r = await fetch('/api/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: '__ping__', canData: carData }),
+          body: JSON.stringify({ query: 'ping', canData: carData }),
         });
         const d = await r.json();
-        vgptOnline = d._source === 'vehiclegpt';
+        vgptOnline = d._source === 'vehiclegpt' || (d._source && d._source.startsWith('ollama'));
       } catch {
         vgptOnline = false;
       }
@@ -882,7 +882,14 @@ export default function HaloCarExperience() {
         if (meta._latency_ms) {
           const lat = document.createElement('div');
           lat.style.cssText = 'margin-top:4px;font-size:10px;opacity:.45;';
-          lat.textContent = `⚡ ${meta._latency_ms}ms · ${meta._source === 'vehiclegpt' ? 'VehicleGPT' : 'local engine'}`;
+          const modelLabel = meta._source === 'vehiclegpt' 
+            ? 'VehicleGPT' 
+            : meta._source === 'ollama_llama3_2_1b'
+            ? `Llama 3.2 1B (${meta._tokens_per_sec || 80} tok/s · 1.4GB RAM · Case Study 5 Compliant)`
+            : (meta._source && meta._source.startsWith('ollama')) 
+            ? 'Llama 3 (Ollama GPU)' 
+            : 'local engine';
+          lat.textContent = `⚡ ${meta._latency_ms}ms · ${modelLabel}`;
           bubble.appendChild(lat);
         }
         chatLog.appendChild(bubble);
@@ -925,7 +932,7 @@ export default function HaloCarExperience() {
           aiBubble.className = 'msg a';
           addMessage('a', '', data);
           aiBubble.remove();
-          vgptOnline = data._source === 'vehiclegpt';
+          vgptOnline = data._source === 'vehiclegpt' || (data._source && data._source.startsWith('ollama'));
           isThinking = false;
           return;
         }
@@ -950,11 +957,12 @@ export default function HaloCarExperience() {
     };
 
     const chips = [
+      'What is my speed and gear right now?',
+      'Check fuel level & estimated range',
+      'Diagnose coolant temp & battery voltage',
+      'Are my tyres nominal across all 4 wheels?',
       'How does an engine work?',
-      'How are my tyres right now?',
       'Tips for driving in heavy rain',
-      'Explain turbocharging',
-      'Is everything okay with my car?',
     ];
     if (chatChips) {
       chatChips.innerHTML = '';
@@ -976,24 +984,197 @@ export default function HaloCarExperience() {
     if (chatLog) {
       chatLog.innerHTML = '';
       addMessage('a', "Hello! I am VehicleGPT, your conversational vehicle AI copilot. Like ChatGPT, you can chat with me about general topics, driving advice, and science, or query your car's live sensors and diagnostics!");
+
+      // Isolate chat log wheel events so internal scroll operates freely and independently
+      // without triggering the outer Lenis page scroll / timeline flow.
+      chatLog.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
     }
 
-    // Randomly fluctuate live CAN signal values (simulated telemetry)
-    const fluctuate = (base, range) => +(base + (Math.random() - 0.5) * range).toFixed(1);
-    let liveSec = 2;
-    const liveTimer = setInterval(() => {
-      liveSec = (liveSec % 5) + 1;
-      // Update live CAN data with slight fluctuations
-      carData.cool = fluctuate(89, 3);
-      carData.volt = fluctuate(12.6, 0.3);
-      carData.eco  = fluctuate(6.3, 0.4);
+    // ── Continuous CAN telemetry stream replaying sample_drive.csv ────────
+    let activeFrameData = { ...carData, frameIndex: 0, isPlaying: true, gear: 'N' };
+
+    const renderTelemetryUI = (t) => {
+      if (!t) return;
+      activeFrameData = { ...activeFrameData, ...t };
+      carData.fuel = t.fuel;
+      carData.range = t.range;
+      carData.cool = t.cool;
+      carData.volt = t.volt;
+      carData.oil = t.oil;
+      carData.speed = t.speed;
+      carData.rpm = t.rpm;
+      carData.gear = t.gear;
+      carData.frameIndex = t.frameIndex;
+      if (t.tyres) carData.tyres = t.tyres;
+
+      // 1. Digital Meters
+      const elSpeed = $('#m-speed');
+      if (elSpeed) elSpeed.textContent = (t.speed || 0).toFixed(1);
+      const barSpeed = $('#bar-speed');
+      if (barSpeed) barSpeed.style.width = Math.min(100, ((t.speed || 0) / 140) * 100) + '%';
+      const elGear = $('#m-gear');
+      if (elGear) elGear.textContent = 'GEAR ' + (t.gear || 'N');
+
+      const elRpm = $('#m-rpm');
+      if (elRpm) elRpm.textContent = (t.rpm || 820).toLocaleString();
+      const barRpm = $('#bar-rpm');
+      if (barRpm) barRpm.style.width = Math.min(100, ((t.rpm || 820) / 6000) * 100) + '%';
+      const elRpmPill = $('#m-rpm-pill');
+      if (elRpmPill) {
+        elRpmPill.textContent = t.rpm > 3500 ? 'HIGH' : t.rpm > 1200 ? 'ACTIVE' : 'IDLE';
+        elRpmPill.className = 'meter-pill ' + (t.rpm > 3500 ? 'amber' : '');
+      }
+
+      const elFuel = $('#m-fuel');
+      if (elFuel) elFuel.textContent = (t.fuel || 64.8).toFixed(1);
+      const barFuel = $('#bar-fuel');
+      if (barFuel) barFuel.style.width = (t.fuel || 64.8) + '%';
+      const elRange = $('#m-range');
+      if (elRange) elRange.textContent = '~' + (t.range || 420) + ' km';
+
+      const elCool = $('#m-cool');
+      if (elCool) elCool.textContent = (t.cool || 85.0).toFixed(1);
+      const barCool = $('#bar-cool');
+      if (barCool) barCool.style.width = Math.min(100, ((t.cool || 85.0) / 120) * 100) + '%';
+      const elCoolPill = $('#m-cool-pill');
+      if (elCoolPill) {
+        elCoolPill.textContent = t.cool > 100 ? 'HOT' : t.cool > 92 ? 'WARM' : 'NOMINAL';
+        elCoolPill.className = 'meter-pill ' + (t.cool > 95 ? 'amber' : '');
+      }
+
+      const elVolt = $('#m-volt');
+      if (elVolt) elVolt.textContent = (t.volt || 12.6).toFixed(2);
+      const barVolt = $('#bar-volt');
+      if (barVolt) barVolt.style.width = Math.min(100, Math.max(10, (((t.volt || 12.6) - 10) / 5) * 100)) + '%';
+      const elVoltPill = $('#m-volt-pill');
+      if (elVoltPill) {
+        elVoltPill.textContent = t.volt >= 13.8 ? 'CHARGING' : t.volt >= 12.4 ? 'HEALTHY' : 'LOW';
+        elVoltPill.className = 'meter-pill ' + (t.volt < 12.2 ? 'amber' : 'blue');
+      }
+
+      const elOil = $('#m-oil');
+      if (elOil) elOil.textContent = (t.oil || 40.0).toFixed(1);
+      const barOil = $('#bar-oil');
+      if (barOil) barOil.style.width = Math.min(100, ((t.oil || 40.0) / 75) * 100) + '%';
+
+      const elTyreFL = $('#m-tyre-fl');
+      if (elTyreFL && t.tyres) elTyreFL.textContent = (t.tyres.FL || 32.0).toFixed(1);
+
+      // 2. Playback Badges & Controls
+      const elBadge = $('#cockpit-frame-badge');
+      if (elBadge) {
+        const framePad = String(t.frameIndex || 0).padStart(4, '0');
+        const totPad = String(t.totalFrames || 1000).padStart(4, '0');
+        elBadge.textContent = `FRAME ${framePad} / ${totPad}`;
+      }
+
+      const elTime = $('#cockpit-time-readout');
+      if (elTime) {
+        const sec = t.frameIndex || 0;
+        const m = String(Math.floor(sec / 60)).padStart(2, '0');
+        const s = String(sec % 60).padStart(2, '0');
+        elTime.textContent = `${m}:${s}`;
+      }
+
+      const elRawTs = $('#cockpit-ts-raw');
+      if (elRawTs) elRawTs.textContent = `TS: ${t.timestamp_us || '0'} µs`;
+
+      const elSlider = $('#cockpit-scrubber');
+      if (elSlider && document.activeElement !== elSlider) {
+        elSlider.value = t.frameIndex || 0;
+      }
+
+      // Play/Pause button state
+      const btnPlay = $('#btn-toggle-play');
+      if (btnPlay) {
+        btnPlay.innerHTML = t.isPlaying ? '⏸ Pause' : '▶ Play';
+        btnPlay.className = 'btn-ctrl btn-play-pause ' + (t.isPlaying ? '' : 'is-paused');
+      }
+
+      const dot = $('#cockpit-pulse-dot');
+      if (dot) {
+        if (t.isPlaying) dot.classList.remove('paused');
+        else dot.classList.add('paused');
+      }
+
+      // Live status line in chat
       const liveEl = $('#live');
       if (liveEl) {
         const icon = vgptOnline ? '🟢' : '🟡';
-        const src = vgptOnline ? 'VehicleGPT · Edge LLM' : 'Edge Engine · local';
-        liveEl.textContent = `${icon} Live · ${src} · updated ${liveSec} s ago`;
+        const src = vgptOnline ? 'Llama 3 (GPU)' : 'Edge local';
+        const spd = t.speed !== undefined ? ` · ${t.speed.toFixed(1)} km/h · Fuel ${t.fuel.toFixed(1)}%` : '';
+        const playState = t.isPlaying ? 'Playing' : 'Paused';
+        liveEl.textContent = `${icon} ${playState} Frame ${t.frameIndex}${spd} · ${src}`;
       }
-    }, 1000);
+
+      // Floating Mini HUD elements
+      const hudSpd = $('#hud-speed');
+      if (hudSpd) hudSpd.textContent = (t.speed || 0).toFixed(0);
+      const hudFuel = $('#hud-fuel');
+      if (hudFuel) hudFuel.textContent = (t.fuel || 64.8).toFixed(1) + '%';
+      const hudBtn = $('#hud-btn-play');
+      if (hudBtn) hudBtn.textContent = t.isPlaying ? '⏸' : '▶';
+    };
+
+    const updateTelemetry = async () => {
+      try {
+        const res = await fetch('/api/telemetry');
+        if (res.ok) {
+          const t = await res.json();
+          renderTelemetryUI(t);
+        }
+      } catch {}
+    };
+
+    const sendTelemetryAction = async (payload) => {
+      try {
+        const res = await fetch('/api/telemetry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          const t = await res.json();
+          renderTelemetryUI(t);
+        }
+      } catch {}
+    };
+
+    // Wire Playback Buttons
+    const btnPlay = $('#btn-toggle-play');
+    if (btnPlay) btnPlay.onclick = () => sendTelemetryAction({ action: 'toggle' });
+
+    const btnPrev = $('#btn-step-prev');
+    if (btnPrev) btnPrev.onclick = () => sendTelemetryAction({ action: 'step', delta: -10 });
+
+    const btnNext = $('#btn-step-next');
+    if (btnNext) btnNext.onclick = () => sendTelemetryAction({ action: 'step', delta: 10 });
+
+    const btnReset = $('#btn-reset-sim');
+    if (btnReset) btnReset.onclick = () => sendTelemetryAction({ action: 'seek', frame: 0 });
+
+    const scrubber = $('#cockpit-scrubber');
+    if (scrubber) {
+      scrubber.oninput = (e) => sendTelemetryAction({ action: 'seek', frame: +e.target.value });
+    }
+
+    const btnAskFrame = $('#btn-ask-telemetry');
+    if (btnAskFrame) {
+      btnAskFrame.onclick = () => {
+        const q = `Explain my vehicle's current status at Frame ${activeFrameData.frameIndex}: traveling at ${activeFrameData.speed} km/h in Gear ${activeFrameData.gear}, engine RPM ${activeFrameData.rpm}, fuel level ${activeFrameData.fuel}%, and coolant temp ${activeFrameData.cool}°C.`;
+        askQuestion(q);
+      };
+    }
+
+    // Mini floating HUD play toggle
+    const hudBtn = $('#hud-btn-play');
+    if (hudBtn) hudBtn.onclick = () => sendTelemetryAction({ action: 'toggle' });
+
+    // Initial load + 1s periodic polling
+    updateTelemetry();
+    const liveTimer = setInterval(updateTelemetry, 1000);
 
     /* ═══════════ ODOMETER PRELOADER ═══════════ */
     const pre = $('#preloader'), col = $('#odometer-numbers');
@@ -1160,6 +1341,37 @@ export default function HaloCarExperience() {
         </a>
         <a data-to="1.0">
           early access <span className="nav-arrow">↗</span>
+        </a>
+      </div>
+
+      {/* FLOATING MINI TELEMETRY HUD */}
+      <div className="floating-hud-pill" title="Live Telemetry HUD — click to jump to cockpit">
+        <button id="hud-btn-play" className="hud-btn-toggle" type="button" title="Play / Pause Replay">
+          ⏸
+        </button>
+        <div className="hud-item">
+          <span>SPD:</span>
+          <strong id="hud-speed">0</strong>
+          <small style={{ opacity: 0.6 }}>km/h</small>
+        </div>
+        <div className="hud-item fuel-item">
+          <span>FUEL:</span>
+          <strong id="hud-fuel">64.8%</strong>
+        </div>
+        <a
+          href="#glass-container"
+          data-to="0.45"
+          style={{
+            color: '#00e5ff',
+            textDecoration: 'none',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+            marginLeft: '0.25rem',
+          }}
+        >
+          COCKPIT ↘
         </a>
       </div>
 
@@ -1401,38 +1613,226 @@ export default function HaloCarExperience() {
               </p>
             </div>
 
-            {/* Kokonut-styled AI Copilot Interface */}
-            <div className="chat" aria-label="Halo automotive LLM copilot">
-              <div className="chat-status">
-                <div className="chat-status-left">
-                  <i aria-hidden="true"></i>
-                  <span id="live">Live · reading the CAN bus · updated 2 s ago</span>
+            {/* Cockpit Grid: Left = Live CAN Meters & Playback, Right = Kokonut AI Chat */}
+            <div className="cockpit-grid">
+              {/* LEFT COLUMN: LIVE CAN METERS COCKPIT & REPLAY CONTROLS */}
+              <div className="telemetry-cockpit" aria-label="Vehicle CAN Telemetry Cockpit" data-lenis-prevent="true">
+                {/* Header with status pulse & frame badge */}
+                <div className="cockpit-header">
+                  <div className="cockpit-title-wrap">
+                    <span id="cockpit-pulse-dot" className="status-pulse-dot"></span>
+                    <span className="cockpit-title">CAN BUS REPLAY ENGINE</span>
+                  </div>
+                  <div className="cockpit-badges">
+                    <span id="cockpit-frame-badge" className="badge-frame">FRAME 0000 / 1000</span>
+                    <span className="badge-rate">1s / FRAME</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <span className="chat-badge">OBD-II • EDGE LLM</span>
-                  <a href="#top" data-to="0" style={{ fontSize: '11px', opacity: 0.6, cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
-                    ↑ 3D CAR
-                  </a>
+
+                {/* Playback Controls & Scrubber */}
+                <div className="playback-bar">
+                  <div className="playback-controls-row">
+                    <div className="playback-btn-group">
+                      <button id="btn-toggle-play" className="btn-ctrl btn-play-pause" type="button">
+                        ⏸ Pause
+                      </button>
+                      <button id="btn-step-prev" className="btn-ctrl" type="button" title="Step back 10 seconds">
+                        ⏮ -10s
+                      </button>
+                      <button id="btn-step-next" className="btn-ctrl" type="button" title="Step forward 10 seconds">
+                        ⏭ +10s
+                      </button>
+                      <button id="btn-reset-sim" className="btn-ctrl" type="button" title="Reset to start">
+                        ↺ Reset
+                      </button>
+                    </div>
+                    <div className="playback-time-readout">
+                      TIME: <span id="cockpit-time-readout" style={{ color: '#4cff7a' }}>00:00</span>
+                    </div>
+                  </div>
+
+                  <div className="scrubber-wrap">
+                    <span style={{ fontSize: '10px', opacity: 0.5 }}>0s</span>
+                    <input
+                      type="range"
+                      id="cockpit-scrubber"
+                      min="0"
+                      max="999"
+                      defaultValue="0"
+                      className="scrubber-slider"
+                      aria-label="Seek replay frame"
+                    />
+                    <span style={{ fontSize: '10px', opacity: 0.5 }}>1000s</span>
+                  </div>
+                </div>
+
+                {/* Meter Cards Grid */}
+                <div className="meter-cards-grid">
+                  {/* Speedometer */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Vehicle Speed</span>
+                      <span id="m-gear" className="meter-pill blue">GEAR N</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-speed" className="meter-val-num">0.0</span>
+                      <span className="meter-unit">km/h</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-speed" className="gauge-fill speed-bar" style={{ width: '0%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Powertrain CAN ID: 0x120</span>
+                  </div>
+
+                  {/* Tachometer (RPM) */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Engine Tachometer</span>
+                      <span id="m-rpm-pill" className="meter-pill">IDLE</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-rpm" className="meter-val-num">820</span>
+                      <span className="meter-unit">RPM</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-rpm" className="gauge-fill rpm-bar" style={{ width: '13%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Revotron 1.2L 3-Cyl</span>
+                  </div>
+
+                  {/* Fuel & Range */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Fuel Level & Range</span>
+                      <span id="m-range" className="meter-pill blue">~421 km</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-fuel" className="meter-val-num">64.8</span>
+                      <span className="meter-unit">%</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-fuel" className="gauge-fill fuel-bar" style={{ width: '64.8%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Tank: 37L • Eco: 6.3 L/100km</span>
+                  </div>
+
+                  {/* Coolant Temperature */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Engine Coolant</span>
+                      <span id="m-cool-pill" className="meter-pill">NOMINAL</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-cool" className="meter-val-num">78.0</span>
+                      <span className="meter-unit">°C</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-cool" className="gauge-fill cool-bar" style={{ width: '65%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Thermostat target: 89–91°C</span>
+                  </div>
+
+                  {/* 12V Battery Voltage */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">12V Battery</span>
+                      <span id="m-volt-pill" className="meter-pill blue">HEALTHY</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-volt" className="meter-val-num">12.6</span>
+                      <span className="meter-unit">V</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-volt" className="gauge-fill volt-bar" style={{ width: '70%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Alternator Output Circuit</span>
+                  </div>
+
+                  {/* Oil Pressure */}
+                  <div className="meter-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Oil Pressure</span>
+                      <span className="meter-pill">NOMINAL</span>
+                    </div>
+                    <div className="meter-value-wrap">
+                      <span id="m-oil" className="meter-val-num">41.5</span>
+                      <span className="meter-unit">kPa</span>
+                    </div>
+                    <div className="gauge-track">
+                      <div id="bar-oil" className="gauge-fill oil-bar" style={{ width: '55%' }}></div>
+                    </div>
+                    <span className="meter-subtext">Vane pump lubrication</span>
+                  </div>
+
+                  {/* 4-Wheel TPMS Card */}
+                  <div className="tpms-card">
+                    <div className="meter-card-header">
+                      <span className="meter-label">Tyre Pressure Monitoring (TPMS)</span>
+                      <span className="meter-pill amber">RR Slow Leak (28 psi)</span>
+                    </div>
+                    <div className="tpms-grid">
+                      <div className="tpms-tile">
+                        <div className="tpms-wheel-name">Front Left</div>
+                        <div className="tpms-wheel-val"><span id="m-tyre-fl">32.0</span> <small style={{ fontSize: '10px', opacity: 0.6 }}>psi</small></div>
+                      </div>
+                      <div className="tpms-tile">
+                        <div className="tpms-wheel-name">Front Right</div>
+                        <div className="tpms-wheel-val">32.0 <small style={{ fontSize: '10px', opacity: 0.6 }}>psi</small></div>
+                      </div>
+                      <div className="tpms-tile">
+                        <div className="tpms-wheel-name">Rear Left</div>
+                        <div className="tpms-wheel-val">31.0 <small style={{ fontSize: '10px', opacity: 0.6 }}>psi</small></div>
+                      </div>
+                      <div className="tpms-tile warning">
+                        <div className="tpms-wheel-name">Rear Right</div>
+                        <div className="tpms-wheel-val">28.0 <small style={{ fontSize: '10px', opacity: 0.6 }}>psi</small></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer with raw microsecond TS and one-click query */}
+                <div className="cockpit-footer">
+                  <span id="cockpit-ts-raw" className="frame-ts-label">TS: 1791830000000000 µs</span>
+                  <button id="btn-ask-telemetry" type="button" className="btn-ask-frame">
+                    ✨ Ask AI to analyze this frame
+                  </button>
                 </div>
               </div>
 
-              <div className="chat-log" id="log" aria-live="polite"></div>
+              {/* RIGHT COLUMN: KOKONUT AI DIAGNOSTIC CHAT */}
+              <div className="chat" aria-label="Halo automotive LLM copilot" data-lenis-prevent="true">
+                <div className="chat-status">
+                  <div className="chat-status-left">
+                    <i aria-hidden="true"></i>
+                    <span id="live">Live · reading the CAN bus · updated 2 s ago</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="chat-badge">OBD-II • EDGE LLM</span>
+                    <a href="#top" data-to="0" style={{ fontSize: '11px', opacity: 0.6, cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
+                      ↑ 3D CAR
+                    </a>
+                  </div>
+                </div>
 
-              <div className="chat-chips" id="chips"></div>
+                <div className="chat-log" id="log" aria-live="polite" data-lenis-prevent="true"></div>
 
-              <form className="chat-form" id="chatform">
-                <input
-                  id="q"
-                  autoComplete="off"
-                  placeholder="Ask like ChatGPT: science, driving tips, car questions, or live telemetry…"
-                  aria-label="Ask about your car"
-                />
-                <button type="submit">Ask AI</button>
-              </form>
+                <div className="chat-chips" id="chips"></div>
 
-              <div className="chat-note">
-                <span>Demo: Real-time simulated CAN frames & edge generative reasoning.</span>
-                <span style={{ opacity: 0.8 }}>ECU: Tata Punch 1.2L Revotron</span>
+                <form className="chat-form" id="chatform">
+                  <input
+                    id="q"
+                    autoComplete="off"
+                    placeholder="Ask like ChatGPT: science, driving tips, car questions, or live telemetry…"
+                    aria-label="Ask about your car"
+                  />
+                  <button type="submit">Ask AI</button>
+                </form>
+
+                <div className="chat-note">
+                  <span>Demo: Real-time simulated CAN frames & edge generative reasoning.</span>
+                  <span style={{ opacity: 0.8 }}>ECU: Tata Punch 1.2L Revotron</span>
+                </div>
               </div>
             </div>
           </div>

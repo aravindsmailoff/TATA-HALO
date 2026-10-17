@@ -37,4 +37,6 @@ ENV/
 *.gguf
 vehiclegpt/logs/
 vehiclegpt/data/db/*.db*
+scratch/
+
 

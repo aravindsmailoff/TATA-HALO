@@ -1,0 +1,37 @@
+# CodeRabbit Configuration File
+# Language: YAML
+version: "2"
+language: "en-US"
+
+tone_instructions: "Be concise, analytical, and prioritize automotive performance, WebGL 60fps rendering, and Next.js 14 best practices."
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+  tools:
+    ast-grep:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+path_filters:
+  - "!node_modules/**"
+  - "!.next/**"
+  - "!public/models/**"
+  - "src/**"
+  - ".gsd/**"
+
+knowledge_base:
+  learnings:
+    - "This project (Tata Halo / VehicleGPT) is an interactive 3D WebGL automotive showcase with a live CAN bus telemetry simulation and local Ollama (Llama 3) edge reasoning."
+    - "The UI relies on Lenis smooth scroll over a 1200vh virtual timeline. Any nested scrollable container (e.g. .chat-log) MUST specify data-lenis-prevent='true' and stop wheel event propagation to prevent scroll hijacking."
+    - "Phase 3 is an Obsidian Glass cockpit HUD (radial-gradient) with symmetrical 610px height cards for telemetry and chat."

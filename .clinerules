@@ -1,0 +1,27 @@
+# Roo Code / Cline Rules for TATA HALO (VehicleGPT)
+
+## Project Overview
+Tata Halo (VehicleGPT) is an on-device automotive diagnostics interface and 3D WebGL showcase built with Next.js 14, Three.js, Lenis, and local Ollama (`llama3:latest` on GPU).
+
+## Architectural Guidelines
+1. **GSD Workflow Synchronization**:
+   - Always reference `.gsd/SPEC.md`, `.gsd/ROADMAP.md`, `.gsd/TASKS.md`, and `.gsd/STATE.md` before making architectural modifications.
+   - When completing tasks, update `.gsd/TASKS.md` with checkmarks `[x]`.
+
+2. **Lenis Scroll Isolation**:
+   - The outer page scroll drives the 3D car animation across 1200vh.
+   - Any internal scrolling component (e.g., `.chat-log`) MUST have:
+     - Attribute: `data-lenis-prevent="true"`
+     - CSS: `overscroll-behavior: contain !important;`
+     - JavaScript: `wheel` event `e.stopPropagation()` to prevent scroll bubbling to Lenis.
+
+3. **Telemetry & Edge AI Pipeline**:
+   - Simulated CAN frames stream from `vehiclegpt/data/datasets/raw/sample_drive.csv` (1,000 continuous frames).
+   - `/api/telemetry` manages frame advancement and playback controls.
+   - `/api/query` connects to Ollama on `http://localhost:11434` with prompt injection of live sensor context.
+   - Maintain instant local fallback if Ollama or GPU is unavailable.
+
+4. **UI Design System**:
+   - Unified luxury dark glassmorphic capsules (`rgba(13, 17, 24, 0.88)` with `36px` backdrop blur).
+   - High-contrast typography: brilliant white `#ffffff` with glowing accents (`#4cff7a` emerald and `#00e5ff` cyan).
+   - Symmetrical heights for cards in Phase 3.
