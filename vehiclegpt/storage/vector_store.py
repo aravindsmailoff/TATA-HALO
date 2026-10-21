@@ -33,9 +33,11 @@ class VectorStore:
         self._index = None
         self._embedder = None
         self._pending: List[Tuple[np.ndarray, dict]] = []
+        self._last_added: dict = {}
 
         self._load_or_create()
         self._load_embedder()
+        self.index_repair_manual()
 
     # ── Init ─────────────────────────────────────────────────
     def _load_embedder(self):
@@ -47,7 +49,11 @@ class VectorStore:
             )
             logger.info("Embedding model loaded (all-MiniLM-L6-v2)")
         except ImportError:
-            logger.error("sentence-transformers not installed. Run: pip install sentence-transformers")
+            logger.warning("sentence-transformers not installed. Semantic vector search disabled.")
+            self._embedder = None
+        except Exception as e:
+            logger.warning(f"Could not load embedding model ({e}). Semantic vector search disabled.")
+            self._embedder = None
 
     def _load_or_create(self):
         try:
@@ -73,12 +79,63 @@ class VectorStore:
         self._metadata = []
         logger.info("New FAISS index created.")
 
+    def index_repair_manual(self, manual_path: Optional[str] = None) -> None:
+        """Index the Tata repair manuals for semantic retrieval."""
+        if not self._embedder:
+            return
+
+        manual_files = [
+            self.index_path.parent.parent / "datasets" / "raw" / "tata_punch_repair_manual.json",
+            self.index_path.parent.parent / "datasets" / "raw" / "comprehensive_repair_manual.json",
+        ]
+        if manual_path:
+            manual_files = [Path(manual_path)]
+
+        for p in manual_files:
+            if not p.exists():
+                continue
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    manual = json.load(f)
+
+                indexed_topics = {m.get("topic") for m in self._metadata if "topic" in m}
+                added = 0
+                for item in manual:
+                    topic = item.get("topic", "")
+                    if topic in indexed_topics:
+                        continue
+                    if "step_by_step" in item:
+                        steps_text = " ".join(item.get("step_by_step", []))
+                        text = f"{topic}: {item.get('simple_explanation', '')} Steps: {steps_text}"
+                    else:
+                        text = f"{topic} ({item.get('category', 'REPAIR')}): {item.get('guide', '')}"
+
+                    self.add_text(text, meta={
+                        "text": text,
+                        "topic": topic,
+                        "source": "REPAIR_MANUAL",
+                        "keywords": item.get("keywords", [])
+                    })
+                    added += 1
+
+                if added > 0:
+                    self.save()
+                    logger.info(f"Indexed {added} entries from {p.name} into FAISS vector store.")
+            except Exception as e:
+                logger.warning(f"Could not index repair manual {p.name}: {e}")
+
     # ── Add Events ───────────────────────────────────────────
     def add_signal(self, signal) -> None:
         """Add a NormalizedSignal to the vector store (events only)."""
         # Only embed notable events — not every routine sensor tick
         if signal.severity == "INFO":
             return
+
+        now = time.time()
+        if signal.signal_id in self._last_added:
+            if now - self._last_added[signal.signal_id] < 60.0:
+                return
+        self._last_added[signal.signal_id] = now
 
         text = signal.to_text_chunk()
         self._add_text(text, meta={

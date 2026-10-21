@@ -1,0 +1,97 @@
+[
+  {
+    "topic": "12V Battery Jump Start Procedure",
+    "keywords": ["battery jump start", "dead battery", "jumpstart", "start car with cables"],
+    "simple_explanation": "If your 12V car battery is dead and won't turn on, you can jump-start it safely using jumper cables and a donor car with a healthy 12V battery.",
+    "step_by_step": [
+      "1. Park the helper car close to your Tata Punch without the cars touching. Turn off both engines and set handbrakes.",
+      "2. Connect the RED jumper cable clamp to the POSITIVE (+) terminal of your Tata Punch dead battery.",
+      "3. Connect the other end of the RED cable to the POSITIVE (+) terminal of the helper car's battery.",
+      "4. Connect the BLACK jumper cable clamp to the NEGATIVE (-) terminal of the helper car's battery.",
+      "5. Connect the other end of the BLACK cable to an unpainted metal bolt or engine bracket on your Tata Punch (keep away from the battery).",
+      "6. Start the helper car's engine and let it run for 3-5 minutes.",
+      "7. Start your Tata Punch. Once it starts, let both run for 3 minutes.",
+      "8. Remove cables in REVERSE order: Black from your car, Black from helper car, Red from helper car, Red from your car.",
+      "9. Drive your car for at least 20-30 minutes so the alternator can recharge your battery."
+    ]
+  },
+  {
+    "topic": "Changing a Flat Tyre and Jacking Points",
+    "keywords": ["flat tyre", "change tyre", "puncture", "jack up car", "spare wheel"],
+    "simple_explanation": "If you get a flat tyre, pull over to a flat, safe surface, turn on hazard lights, and follow these easy steps using the spare wheel and jack in your boot.",
+    "step_by_step": [
+      "1. Park on firm, level ground, engage the handbrake firmly, and put the gear in 1st gear or Park.",
+      "2. Open the boot, lift the boot floor mat, and take out the jack, wheel spanner, and spare wheel.",
+      "3. Loosen the 4 wheel lug nuts with the spanner by turning counter-clockwise 1/2 turn (do not remove them yet).",
+      "4. Locate the reinforced jacking point slot under the car sill right behind the front wheel or ahead of the rear wheel.",
+      "5. Turn the jack screw clockwise by hand until it seats into the jacking notch, then crank the jack handle to lift the car until the flat tyre is 2-3 inches off the ground.",
+      "6. Fully unscrew and remove the lug nuts, then pull the flat tyre off.",
+      "7. Mount the spare wheel onto the hub bolts and hand-tighten the lug nuts clockwise.",
+      "8. Lower the jack until the tyre touches the ground, then tighten the lug nuts firmly in a criss-cross (star) pattern with the spanner.",
+      "9. Check tyre pressure (recommended: 32-33 psi) at the earliest fuel station."
+    ]
+  },
+  {
+    "topic": "Engine Oil Check and Top-Up",
+    "keywords": ["engine oil", "check oil", "oil dipstick", "top up oil", "low oil"],
+    "simple_explanation": "Engine oil keeps your engine lubricated and running cool. Checking it once a month takes just 2 minutes and prevents major engine damage.",
+    "step_by_step": [
+      "1. Park on level ground and wait 10 minutes after turning off the engine so oil settles in the oil pan.",
+      "2. Open the bonnet and locate the bright yellow dipstick handle in the engine bay.",
+      "3. Pull the dipstick out, wipe the tip completely clean with a paper towel or clean cloth.",
+      "4. Push the dipstick all the way back into the tube, then pull it out again.",
+      "5. Look at the oil level on the tip: it should be between the MIN and MAX markers. If it is near or below MIN, you need to add oil.",
+      "6. Unscrew the oil filler cap (with oil can symbol), pour 0.5 liters of recommended 5W-30 synthetic engine oil using a funnel, wait 2 minutes, and re-check with the dipstick."
+    ]
+  },
+  {
+    "topic": "Engine Coolant Inspection and Refill",
+    "keywords": ["coolant", "radiator fluid", "overheating", "refill coolant", "expansion tank"],
+    "simple_explanation": "Coolant keeps the engine from overheating in summer and freezing in winter. Always check the clear coolant reservoir tank when the engine is COLD.",
+    "step_by_step": [
+      "1. SAFETY WARNING: NEVER open the coolant reservoir or radiator cap when the engine is hot. Boiling steam can cause severe burns.",
+      "2. Look through the translucent coolant tank beside the engine: the fluid level should be between MIN and MAX.",
+      "3. If low, wait until the engine is completely cold to the touch.",
+      "4. Slowly unscrew the expansion tank cap to release any residual pressure.",
+      "5. Top up with a 50/50 premixed ethylene glycol automotive coolant until it reaches the MAX line.",
+      "6. Screw the cap back on tightly until it clicks."
+    ]
+  },
+  {
+    "topic": "Check Engine Light (MIL) Troubleshooting",
+    "keywords": ["check engine light", "warning light", "mil", "fault code", "engine warning"],
+    "simple_explanation": "The check engine light looks like a little engine silhouette on your dashboard. It tells you that the car's computer detected an issue with sensors or emissions.",
+    "step_by_step": [
+      "1. Steady / Solid Light: The computer noticed a sensor or emissions anomaly (like an oxygen sensor, loose fuel cap, or minor misfire). The car is driveable, but drive gently and schedule a scan at a service center.",
+      "2. Check Fuel Cap: A loose petrol cap is the #1 cause of false check engine lights. Tighten it until it clicks 3 times.",
+      "3. Flashing / Blinking Light: DANGER. A flashing check engine light indicates an active severe engine misfire that can melt the catalytic converter. Pull over safely immediately and turn off the engine. Call roadside assistance.",
+      "4. VehicleGPT Scan: Ask me 'What active fault codes are present?' and I will read the exact diagnostic trouble codes (DTCs) from the car's CAN bus."
+    ]
+  },
+  {
+    "topic": "Fuse Box Guide and Replacement",
+    "keywords": ["blown fuse", "fuse box", "electrical fault", "replace fuse", "fuse location"],
+    "simple_explanation": "Fuses protect electrical parts (like headlights, horn, infotainment screen, and power windows) from burning out if there is a power surge.",
+    "step_by_step": [
+      "1. Turn off the ignition and headlights.",
+      "2. Locate the fuse boxes: Cabin fuse box is beneath the driver dashboard on the right. Engine bay fuse box is on the left side beside the 12V battery.",
+      "3. Open the fuse cover and check the diagram printed on the inside of the lid to find the fuse number (e.g., F12 Horn, F24 Screen).",
+      "4. Use the small white plastic fuse puller clip inside the box to pull the fuse straight out.",
+      "5. Look at the metal wire inside the fuse: if the wire is broken or charred black, the fuse is blown.",
+      "6. Replace it with a spare fuse of the EXACT same color and amperage rating (e.g. Red = 10A, Blue = 15A, Yellow = 20A)."
+    ]
+  },
+  {
+    "topic": "Tata Punch Routine Maintenance Schedule",
+    "keywords": ["service schedule", "maintenance intervals", "oil change interval", "periodic service"],
+    "simple_explanation": "Keeping up with routine servicing ensures your Tata Punch stays reliable, delivers maximum fuel economy, and preserves your warranty.",
+    "step_by_step": [
+      "1. 1st Service: 1,000 to 2,000 km or 2 months (Free safety check, fluid levels inspection, bolt torquing).",
+      "2. 2nd Service: 7,500 km or 6 months (General inspection, wash, tyre rotation, air filter cleaning).",
+      "3. 3rd Service: 15,000 km or 1 year (Full service: engine oil and oil filter replacement, AC cabin filter replacement).",
+      "4. Subsequent Services: Every 15,000 km or 12 months thereafter.",
+      "5. Brake Fluid & Coolant: Replace every 2 years or 30,000 km.",
+      "6. Spark Plugs: Replace every 45,000 km for smooth ignition."
+    ]
+  }
+]

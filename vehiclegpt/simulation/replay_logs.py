@@ -76,31 +76,32 @@ class LogReplayer:
             logger.warning("Empty CSV file.")
             return
 
-        prev_ts = int(rows[0].get("timestamp_us", 0))
+        while self._running:
+            prev_ts = int(rows[0].get("timestamp_us", 0))
 
-        for row in rows:
-            if not self._running:
-                break
+            for row in rows:
+                if not self._running:
+                    break
 
-            ts = int(row.get("timestamp_us", 0))
-            delay = (ts - prev_ts) / 1e6 / self.speed
-            if delay > 0:
-                time.sleep(min(delay, 1.0))   # cap sleep at 1s for safety
-            prev_ts = ts
+                ts = int(row.get("timestamp_us", 0))
+                delay = (ts - prev_ts) / 1e6 / self.speed
+                if delay > 0:
+                    time.sleep(min(delay, 1.0))   # cap sleep at 1s for safety
+                prev_ts = ts
 
-            sig = self.norm.normalize(
-                signal_id=row.get("signal_id", "UNKNOWN"),
-                value=row.get("value", 0),
-                source=row.get("source", "REPLAY"),
-                unit=row.get("unit", ""),
-                timestamp_us=ts,
-            )
-            try:
-                self.q.put_nowait(sig)
-            except Exception:
-                pass
+                sig = self.norm.normalize(
+                    signal_id=row.get("signal_id", "UNKNOWN"),
+                    value=row.get("value", 0),
+                    source=row.get("source", "REPLAY"),
+                    unit=row.get("unit", ""),
+                    timestamp_us=ts,
+                )
+                try:
+                    self.q.put_nowait(sig)
+                except Exception:
+                    pass
 
-        logger.info("CSV replay complete.")
+        logger.info("CSV replay stopped.")
 
     # ── JSON Replay ──────────────────────────────────────────
     def _replay_json(self):

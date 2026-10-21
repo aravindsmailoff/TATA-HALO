@@ -18,13 +18,14 @@ inference:
   llamacpp_binary: "./llama-cli"
   gguf_path: "./data/models/vehiclegpt-q4_k_m.gguf"
 
-  # Generation params — keep temp=0 for deterministic output
+  # Generation params — optimized for embedded in-car deployment (< 2.0s latency)
   temperature: 0.0
   top_k: 1
   top_p: 0.1
   repeat_penalty: 1.1
-  max_tokens: 600
-  context_size: 2048          # 2048 context window for complete conversational answers
+  max_tokens: 75              # 75 tokens (~50 words) allows clean, complete sentence generation without truncation
+  context_size: 512           # Compact context window to fit within embedded 2 GB RAM and < 20ms prompt eval
+  num_threads: 8              # Multi-threaded CPU acceleration for automotive SoC
 
   # Grammar file for constrained decoding
   grammar_file: "./inference/grammar/vehicle_response.gbnf"

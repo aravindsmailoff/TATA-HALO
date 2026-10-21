@@ -41,8 +41,9 @@ class LLMEngine:
         self.top_k = int(cfg.get("top_k", 1))
         self.top_p = float(cfg.get("top_p", 0.1))
         self.repeat_penalty = float(cfg.get("repeat_penalty", 1.1))
-        self.max_tokens = int(cfg.get("max_tokens", 200))
+        self.max_tokens = int(cfg.get("max_tokens", 40))
         self.context_size = int(cfg.get("context_size", 512))
+        self.num_threads = int(cfg.get("num_threads", 8))
 
     # ── Primary Entry ────────────────────────────────────────
     def generate(self, prompt: str) -> dict:
@@ -74,7 +75,7 @@ class LLMEngine:
             "model": self.model_name,
             "prompt": prompt,
             "stream": False,
-            "format": "json",       # Ollama's built-in JSON mode
+            "think": False,
             "options": {
                 "temperature": self.temperature,
                 "top_k": self.top_k,
@@ -82,13 +83,14 @@ class LLMEngine:
                 "repeat_penalty": self.repeat_penalty,
                 "num_predict": self.max_tokens,
                 "num_ctx": self.context_size,
+                "num_thread": self.num_threads,
             },
         }
 
         resp = requests.post(
             f"{self.ollama_url}/api/generate",
             json=payload,
-            timeout=35,
+            timeout=15,
         )
         resp.raise_for_status()
         data = resp.json()
@@ -109,10 +111,12 @@ class LLMEngine:
                 "model": self.model_name,
                 "prompt": prompt,
                 "stream": False,
+                "think": False,
                 "options": {
                     "num_ctx": self.context_size,
                     "num_predict": self.max_tokens,
                     "temperature": 0.6,
+                    "num_thread": self.num_threads,
                 },
             }
             resp = requests.post(
@@ -197,10 +201,31 @@ class LLMEngine:
             except json.JSONDecodeError:
                 pass
 
+        # Regex fallback: extract content of "answer" field
+        import re
+        m = re.search(r'"answer"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)', raw)
+        if m:
+            clean_ans = m.group(1).replace('\\"', '"').replace('\\n', ' ').strip()
+            # If dangles with an unfinished word or conjunction, clean up
+            if clean_ans:
+                return {
+                    "status": "OK",
+                    "answer": clean_ans,
+                    "severity": "NONE",
+                    "timestamp": "",
+                    "active_faults": [],
+                    "data": None,
+                }
+
         if raw and raw.strip():
             clean = raw.strip()
             if "</think>" in clean:
                 clean = clean.split("</think>")[-1].strip()
+            # If clean starts with {"status" or similar JSON fragment, strip JSON syntax
+            if clean.startswith("{") and '"answer"' in clean:
+                m2 = re.search(r'"answer"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)', clean)
+                if m2:
+                    clean = m2.group(1).replace('\\"', '"').replace('\\n', ' ').strip()
             if clean:
                 return {
                     "status": "OK",
@@ -218,6 +243,7 @@ class LLMEngine:
 
     def _validate_schema(self, obj: dict) -> dict:
         """Ensure required fields exist with valid values."""
+        import re
         valid_status = {"OK", "WARNING", "FAULT", "CRITICAL", "NOT_FOUND", "ERROR"}
         valid_severity = {"NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"}
 
@@ -227,6 +253,22 @@ class LLMEngine:
         obj.setdefault("timestamp", "")
         obj.setdefault("active_faults", [])
         obj.setdefault("data", None)
+
+        if isinstance(obj["answer"], str):
+            ans = obj["answer"]
+            if "</think>" in ans:
+                ans = ans.split("</think>")[-1].strip()
+            if "Thinking Process:" in ans:
+                paragraphs = ans.split("\n\n")
+                clean_pars = [p.strip() for p in paragraphs if not p.strip().startswith("Thinking Process:") and not p.strip().startswith("1.") and not p.strip().startswith("2.") and not p.strip().startswith("*")]
+                if clean_pars:
+                    ans = " ".join(clean_pars).strip()
+            # If the answer is itself a stringified JSON fragment
+            if ans.strip().startswith("{") and '"answer"' in ans:
+                m_inner = re.search(r'"answer"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)', ans)
+                if m_inner:
+                    ans = m_inner.group(1).replace('\\"', '"').replace('\\n', ' ').strip()
+            obj["answer"] = ans
 
         if obj["status"] not in valid_status:
             obj["status"] = "OK"

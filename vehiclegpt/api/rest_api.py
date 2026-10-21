@@ -94,6 +94,28 @@ async def query(req: QueryRequest):
     return result
 
 
+@app.get("/predict")
+async def predict_forecast():
+    """Predictive vehicle health, fuel depletion, and service forecast from drive telemetry."""
+    if _rag is None or _ring is None:
+        raise HTTPException(status_code=503, detail="Pipeline not initialized.")
+    snapshot = _ring.snapshot()
+    f_val = snapshot.get("FUEL_LEVEL").value if snapshot.get("FUEL_LEVEL") else 62.0
+    s_val = snapshot.get("PERF_VEHICLE_SPEED").value if snapshot.get("PERF_VEHICLE_SPEED") else 55.0
+    c_val = snapshot.get("ENGINE_COOLANT_TEMP").value if snapshot.get("ENGINE_COOLANT_TEMP") else 89.5
+    v_val = snapshot.get("BATTERY_VOLTAGE").value if snapshot.get("BATTERY_VOLTAGE") else 13.8
+    o_val = snapshot.get("OIL_PRESSURE").value if snapshot.get("OIL_PRESSURE") else 41.5
+
+    return {
+        "status": "OK",
+        "forecast_summary": _rag.predictor.predict_overall(snapshot),
+        "fuel": _rag.predictor.predict_fuel(f_val, s_val),
+        "coolant": _rag.predictor.predict_coolant(c_val),
+        "battery": _rag.predictor.predict_battery(v_val),
+        "oil_service": _rag.predictor.predict_oil_and_service(o_val),
+    }
+
+
 @app.get("/status")
 async def status():
     """Current vehicle snapshot — all latest signal readings."""

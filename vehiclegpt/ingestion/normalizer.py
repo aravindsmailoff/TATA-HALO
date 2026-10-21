@@ -13,7 +13,7 @@ logger = logging.getLogger("vehiclegpt.normalizer")
 
 # Severity thresholds — extend per vehicle config
 SEVERITY_MAP = {
-    "ENGINE_COOLANT_TEMP":  {"WARNING": 90.0, "FAULT": 105.0, "CRITICAL": 120.0},
+    "ENGINE_COOLANT_TEMP":  {"WARNING": 98.0, "FAULT": 108.0, "CRITICAL": 120.0},
     "BATTERY_VOLTAGE":      {"WARNING": 11.8, "FAULT": 11.0,  "CRITICAL": 10.5},
     "OIL_PRESSURE":         {"WARNING": 15.0, "FAULT": 10.0,  "CRITICAL": 5.0},
     "FUEL_LEVEL":           {"WARNING": 15.0, "FAULT": 5.0,   "CRITICAL": 2.0},

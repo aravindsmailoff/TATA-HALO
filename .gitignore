@@ -36,7 +36,8 @@ ENV/
 *.index
 *.gguf
 vehiclegpt/logs/
-vehiclegpt/data/db/*.db*
+vehiclegpt/data/db/*
+!vehiclegpt/data/db/.gitkeep
 scratch/
 
 

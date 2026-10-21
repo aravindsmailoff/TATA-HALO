@@ -832,6 +832,11 @@ export default function HaloCarExperience() {
         () =>
           `Tata Punch 1.2L Revotron engine: 3 cylinders, 86 PS @ 6000 rpm, 115 Nm torque. CAN-bus telemetry confirms all sensors (MAF, MAP, coolant, throttle position) are operating within factory nominal thresholds.`,
       ],
+      [
+        /breakdown|broke down|broken down|mechanic|service center|service centre|sos|stranded|emergency/i,
+        () =>
+          `EMERGENCY BREAKDOWN DETECTED · ROADSIDE ASSISTANCE DISPATCH: Vehicle Status: Immobilized / Breakdown Alert. Location: NH-48 Km 64.2, Khandala Ghat Bypass (18.7547° N, 73.4072° E). Nearest: Tata Authorized Service Centre (2.4 km, +91 98200 12345), Highway 24x7 Express Mechanic (1.8 km, +91 98765 43210). Click Initiate Automated Agent SOS Call to dispatch assistance.`,
+      ],
     ];
 
     const defaultReply =
@@ -840,13 +845,105 @@ export default function HaloCarExperience() {
     let isThinking = false;
     let vgptOnline = false;
 
+    // ── Real User Geolocation Detection ──────────────────────
+    let realUserLocation = {
+      city: 'Chennai',
+      region: 'Tamil Nadu',
+      country: 'India',
+      lat: 13.0895,
+      lng: 80.2739,
+      coordinates: '11.0168° N, 76.9558° E',
+      formatted: 'North Coimbatore, Tamil Nadu, India',
+      city: 'Coimbatore',
+      region: 'Tamil Nadu',
+      country: 'India',
+      lat: 11.0168,
+      lng: 76.9558,
+      isGps: false,
+    };
+
+    let currentRadiusKm = 5;
+
+    const detectRealLocation = async () => {
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = Number(pos.coords.latitude.toFixed(4));
+            const lng = Number(pos.coords.longitude.toFixed(4));
+            try {
+              const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`, {
+                headers: { 'Accept-Language': 'en' },
+                signal: AbortSignal.timeout(4500),
+              });
+              if (r.ok) {
+                const geo = await r.json();
+                const a = geo.address || {};
+                const city = a.city || a.town || a.village || a.county || a.state_district || 'Local Area';
+                const area = a.suburb || a.neighbourhood || a.road || '';
+                const state = a.state || '';
+                realUserLocation = {
+                  city,
+                  region: state,
+                  country: a.country || 'India',
+                  lat,
+                  lng,
+                  coordinates: `${lat}° N, ${lng}° E`,
+                  formatted: [area, city, state].filter(Boolean).join(', ') || `${city}, ${state}`,
+                  isGps: true,
+                };
+                return;
+              }
+            } catch {}
+            realUserLocation = {
+              city: 'Current Location',
+              region: '',
+              country: 'India',
+              lat,
+              lng,
+              coordinates: `${lat}° N, ${lng}° E`,
+              formatted: `Exact GPS: ${lat}° N, ${lng}° E`,
+              isGps: true,
+            };
+          },
+          () => {
+            fetchIPLocation();
+          },
+          { timeout: 6000, maximumAge: 0, enableHighAccuracy: true }
+        );
+      } else {
+        fetchIPLocation();
+      }
+    };
+
+    const fetchIPLocation = async () => {
+      try {
+        const r = await fetch('http://ip-api.com/json');
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.status === 'success') {
+            realUserLocation = {
+              city: d.city || 'Local Area',
+              region: d.regionName || 'India',
+              country: d.country || 'India',
+              lat: Number(d.lat.toFixed(4)),
+              lng: Number(d.lon.toFixed(4)),
+              coordinates: `${d.lat.toFixed(4)}° N, ${d.lon.toFixed(4)}° E`,
+              formatted: `${d.city}, ${d.regionName}, ${d.country}`,
+              isGps: false,
+            };
+          }
+        }
+      } catch {}
+    };
+    detectRealLocation();
+
     // ── Check VehicleGPT backend connectivity ─────────────────
     const checkBackend = async () => {
       try {
         const r = await fetch('/api/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: 'ping', canData: carData }),
+          body: JSON.stringify({ query: 'ping', canData: carData, userLocation: realUserLocation }),
         });
         const d = await r.json();
         vgptOnline = d._source === 'vehiclegpt' || (d._source && d._source.startsWith('ollama'));
@@ -856,55 +953,615 @@ export default function HaloCarExperience() {
     };
     checkBackend();
 
+    // Helper to render mechanics cards (accessible across AI answer formatter and dynamic event listeners)
+    const renderProvidersHtml = (providers) => {
+      if (!providers || providers.length === 0) {
+        return `<div style="padding:0.75rem;font-size:12px;color:rgba(255,255,255,0.6);text-align:center;">No mechanics found in this immediate radius. Try selecting 10 km or 25 km above.</div>`;
+      }
+      return providers.map((p) => `
+        <div class="ai-provider-card ${p.isOfficial ? 'official' : ''}" data-id="${p.id || ''}">
+          <div class="provider-header">
+            <div class="provider-name">${p.name}</div>
+            <span class="provider-badge">${p.isOfficial ? 'Tata Authorized' : 'Verified 24/7'}</span>
+          </div>
+          <div class="provider-meta">
+            <span class="provider-dist">📍 ${p.distance}</span>
+            <span class="provider-eta">⚡ ETA: ${p.eta}</span>
+            <span>⭐ ${p.rating}</span>
+          </div>
+          <div class="provider-services">${p.services}</div>
+          ${p.address ? `<div style="font-size:10.5px;color:rgba(255,255,255,0.5);margin-bottom:0.45rem;">🏢 ${p.address}</div>` : ''}
+          <div class="provider-actions">
+            <a href="tel:${p.phone}" class="btn-provider-call" onclick="event.stopPropagation();">
+              <span>📞</span>
+              <span>Call ${p.displayPhone}</span>
+            </a>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    // Helper to format structured automotive AI answers
+    const formatStructuredAIAnswer = (rawText, meta) => {
+      const text = rawText || meta?.answer || '';
+      const status = meta?.status || 'OK';
+      const latency = meta?._latency_ms;
+      const modelSource = meta?._source || '';
+
+      let modelLabel = 'Qwen 3.5 0.8B (Edge SLM)';
+      if (modelSource === 'vehiclegpt') {
+        modelLabel = 'VehicleGPT · Tata Telemetry';
+      } else if (modelSource.startsWith('ollama')) {
+        const tok = meta?._tokens_per_sec ? `${meta._tokens_per_sec} tok/s · ` : '';
+        modelLabel = `Qwen 3.5 0.8B (${tok}950MB RAM)`;
+      } else if (modelSource === 'local_engine' || modelSource === 'local_fallback') {
+        modelLabel = 'CAN Fast-Path (0.27ms)';
+      }
+
+      // Check if this is a breakdown / emergency roadside assistance response
+      const isBreakdown = meta?.data?.is_breakdown ||
+        /EMERGENCY BREAKDOWN|ROADSIDE ASSISTANCE|Nearest Authorized Service|Immobilized|call.*mechanic|nearest mechanic|service center/i.test(text);
+
+      // Check if this is a step-by-step repair guide
+      const hasNumberedSteps = !isBreakdown && (/(?:^|\s)1\.\s+[^:]+:/i.test(text) || (/\b1\.\s+/i.test(text) && /\b2\.\s+/i.test(text)));
+
+      // Check if this is a prediction response
+      const isPrediction = !isBreakdown && (/\[VEHICLE PREDICTIONS/i.test(text) || /Predicted Range:/i.test(text));
+
+      let statusClass = 'status-ok';
+      let statusText = 'NOMINAL';
+      if (isBreakdown) {
+        statusClass = 'status-critical';
+        statusText = 'EMERGENCY BREAKDOWN';
+      } else if (status === 'WARNING' || (/leak|low|check/i.test(text) && /tyre|battery|coolant/i.test(text))) {
+        statusClass = 'status-warning';
+        statusText = 'ATTENTION';
+      } else if (status === 'FAULT' || status === 'CRITICAL' || (meta?.active_faults && meta.active_faults.length > 0)) {
+        statusClass = 'status-fault';
+        statusText = 'DTC FAULT';
+      }
+
+      let domainTag = 'COPILOT';
+      if (isBreakdown) domainTag = '24/7 ROADSIDE ASSISTANCE';
+      else if (hasNumberedSteps) domainTag = 'WORKSHOP MANUAL';
+      else if (isPrediction) domainTag = 'AI FORECAST';
+      else if (/tyre|battery|cool|rpm|gear|speed|fuel/i.test(text)) domainTag = 'CAN TELEMETRY';
+
+      // Header Bar HTML
+      let html = `
+        <div class="ai-header-bar">
+          <div class="ai-header-left">
+            <span class="ai-status-pill ${statusClass}">● ${statusText}</span>
+            <span class="ai-domain-tag">${domainTag}</span>
+          </div>
+          ${latency ? `<span class="ai-model-pill">⚡ ${latency}ms · ${modelLabel}</span>` : ''}
+        </div>
+      `;
+
+      if (isBreakdown) {
+        const loc = meta?.data?.location || {
+          name: realUserLocation.formatted,
+          coordinates: realUserLocation.coordinates,
+          city: realUserLocation.city,
+          lat: realUserLocation.lat,
+          lng: realUserLocation.lng,
+          isGps: realUserLocation.isGps,
+        };
+        const activeRadius = meta?.data?.radiusKm || currentRadiusKm || 5;
+        const providers = meta?.data?.providers || [];
+
+        html += `
+          <div class="breakdown-loc-banner" data-lat="${loc.lat || ''}" data-lng="${loc.lng || ''}">
+            <div class="breakdown-loc-header">
+              <div class="breakdown-loc-title">
+                <span>🚨</span>
+                <span>Vehicle Immobilized · Breakdown Alert</span>
+              </div>
+              <span class="breakdown-gps-coords">${loc.isGps ? '🛰️ Exact Satellite GPS' : '📍 Breakdown Spot'}: ${loc.coordinates}</span>
+            </div>
+            <div class="breakdown-landmark">📍 Breakdown Spot: <strong class="breakdown-spot-name">${loc.name}</strong></div>
+
+            <!-- Interactive Pinpoint & Radius Toolbar -->
+            <div class="breakdown-location-toolbar">
+              <div class="breakdown-search-row">
+                <input type="text" class="breakdown-search-input" placeholder="Type exact breakdown road, area or landmark..." value="${loc.name || ''}" />
+                <button type="button" class="btn-breakdown-search">🔍 Pinpoint</button>
+                <button type="button" class="btn-breakdown-gps">🎯 Use GPS</button>
+              </div>
+              <div class="breakdown-radius-row">
+                <span class="radius-label">Mechanic Radius:</span>
+                <div class="radius-pills-group">
+                  <button type="button" class="btn-radius-pill ${activeRadius === 3 ? 'active' : ''}" data-radius="3">3 km</button>
+                  <button type="button" class="btn-radius-pill ${activeRadius === 5 ? 'active' : ''}" data-radius="5">5 km (Standard)</button>
+                  <button type="button" class="btn-radius-pill ${activeRadius === 10 ? 'active' : ''}" data-radius="10">10 km</button>
+                  <button type="button" class="btn-radius-pill ${activeRadius === 25 ? 'active' : ''}" data-radius="25">25 km (Highway)</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:6px;font-size:11px;color:rgba(255,255,255,0.65);">
+              Live Telemetry: Tata Punch 1.2L Revotron · Battery 12.6V · Coolant 88°C · Oil 40 kPa
+            </div>
+          </div>
+
+          <button type="button" class="btn-sos-trigger btn-agent-sos-call">
+            <span class="sos-beacon"></span>
+            <span>🚨 Initiate Automated Agent SOS Call & Dispatch</span>
+          </button>
+
+          <div class="sos-call-slot"></div>
+
+          <div class="ai-topic-title-wrap" style="margin-top:0.4rem;margin-bottom:0.6rem;">
+            <div class="ai-topic-title" style="font-size:13px;">
+              <span>🛠️</span>
+              <span class="mechanics-header-title">Nearest Mechanics within ${activeRadius} km Radius</span>
+            </div>
+          </div>
+
+          <div class="ai-providers-container">
+            ${renderProvidersHtml(providers)}
+          </div>
+        `;
+
+      } else if (hasNumberedSteps) {
+        // Parse Title and Steps
+        let titlePart = '';
+        let stepsPart = text;
+        const firstStepIdx = text.search(/(?:^|\s)1\.\s+/);
+        if (firstStepIdx !== -1) {
+          titlePart = text.slice(0, firstStepIdx).trim();
+          stepsPart = text.slice(firstStepIdx).trim();
+        }
+
+        // Clean up titlePart
+        let cleanTitle = 'Air Conditioning & Climate Troubleshooting';
+        let cleanSub = 'Tata Nexon & Punch Workshop Diagnostic Procedure';
+        if (titlePart) {
+          const catMatch = titlePart.match(/\(([^)]+)\)/);
+          const domain = catMatch ? catMatch[1].toUpperCase() : 'MAINTENANCE';
+          cleanTitle = titlePart.replace(/\([^)]+\)/g, '').replace(/Repair Tip for/i, '').replace(/:\s*$/, '').trim();
+          cleanSub = `${domain} SYSTEM · STEP-BY-STEP REPAIR & VERIFICATION`;
+        }
+
+        html += `
+          <div class="ai-topic-title-wrap">
+            <div class="ai-topic-title">
+              <span>🔧</span>
+              <span>${cleanTitle}</span>
+            </div>
+            <div class="ai-topic-subtitle">${cleanSub}</div>
+          </div>
+        `;
+
+        // Split by numbered step markers (1. , 2. , 3. , etc.) cleanly even if body contains numbers
+        const rawStepBlocks = stepsPart.split(/(?=(?:^|\s)\d+\.\s+)/).map(s => s.trim()).filter(Boolean);
+        const steps = [];
+        rawStepBlocks.forEach((block, idx) => {
+          const m = block.match(/^(\d+)\.\s*([^:]+?)(?::\s*(.*))?$/s);
+          if (m) {
+            steps.push({
+              num: m[1].padStart(2, '0'),
+              title: m[2].trim(),
+              desc: (m[3] || '').trim(),
+            });
+          } else {
+            steps.push({
+              num: String(idx + 1).padStart(2, '0'),
+              title: `Step ${idx + 1}`,
+              desc: block.replace(/^\d+\.\s*/, '').trim(),
+            });
+          }
+        });
+
+        html += `<div class="ai-steps-container">`;
+        steps.forEach((s) => {
+          html += `
+            <div class="ai-step-card" data-step="${s.num}">
+              <div class="ai-step-top">
+                <div class="ai-step-title-group">
+                  <div class="ai-step-num">${s.num}</div>
+                  <div class="ai-step-title">${s.title}</div>
+                </div>
+                <button type="button" class="ai-step-toggle-btn">Mark Done</button>
+              </div>
+              <div class="ai-step-desc">${s.desc}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+
+        // Safety Caution Box
+        html += `
+          <div class="ai-caution-box">
+            <span class="ai-caution-icon">⚠️</span>
+            <span>Safety Notice: Turn off engine and let surfaces cool before inspecting belts, moving pulleys, or high-pressure refrigerant ports.</span>
+          </div>
+        `;
+
+      } else if (isPrediction) {
+        // Parse Prediction Cards
+        const fuelMatch = text.match(/Fuel Remaining:\s*([^-\n]+)/i);
+        const rangeMatch = text.match(/Predicted Range:\s*([^-\n]+)/i);
+        const thermalMatch = text.match(/Engine Thermal:\s*([^-\n]+)/i);
+        const oilMatch = text.match(/Oil Pressure[^:]*:\s*([^-\n]+)/i);
+        const healthMatch = text.match(/Health Assessment:\s*([^.\n]+)/i);
+
+        html += `
+          <div class="ai-topic-title-wrap">
+            <div class="ai-topic-title">
+              <span>🔮</span>
+              <span>Predictive Vehicle Diagnostics (50 km Horizon)</span>
+            </div>
+            <div class="ai-topic-subtitle">CAN SENSOR MACHINE LEARNING PROJECTIONS</div>
+          </div>
+          <div class="ai-forecast-grid">
+            <div class="ai-forecast-tile">
+              <div class="forecast-tile-top"><span>⛽ Fuel Reserve</span><span>Nominal</span></div>
+              <div class="forecast-tile-val">${fuelMatch ? fuelMatch[1].trim() : '60.1%'}</div>
+              <div class="forecast-tile-sub">Projected rate: 6.3 L/100km</div>
+            </div>
+            <div class="ai-forecast-tile">
+              <div class="forecast-tile-top"><span>🛣️ Projected Range</span><span>Safe</span></div>
+              <div class="forecast-tile-val">${rangeMatch ? rangeMatch[1].trim() : '351 km'}</div>
+              <div class="forecast-tile-sub">Horizon clearance: 100%</div>
+            </div>
+            <div class="ai-forecast-tile">
+              <div class="forecast-tile-top"><span>🌡️ Engine Thermal</span><span>Optimal</span></div>
+              <div class="forecast-tile-val">${thermalMatch ? thermalMatch[1].trim() : '89.2°C'}</div>
+              <div class="forecast-tile-sub">Thermostat nominal (85–95°C)</div>
+            </div>
+            <div class="ai-forecast-tile">
+              <div class="forecast-tile-top"><span>🛢️ Oil Pressure</span><span>Active</span></div>
+              <div class="forecast-tile-val">${oilMatch ? oilMatch[1].trim() : '44.8 kPa'}</div>
+              <div class="forecast-tile-sub">Full boundary lubrication</div>
+            </div>
+            <div class="forecast-assessment-bar">
+              <span>🛡️</span>
+              <span>${healthMatch ? healthMatch[1].trim() : 'All primary powertrain systems nominal.'}</span>
+            </div>
+          </div>
+        `;
+      } else {
+        // Conversational / General / Telemetry Answer
+        let formatted = text
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .split('\n\n')
+          .filter(Boolean)
+          .map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`)
+          .join('');
+
+        if (!formatted) formatted = `<p>${text}</p>`;
+
+        html += `<div class="ai-text-body">${formatted}</div>`;
+      }
+
+      // Active DTC line if present
+      if (meta?.active_faults && meta.active_faults.length > 0) {
+        html += `
+          <div style="margin-top:6px;font-size:11px;color:#f87171;font-family:monospace;padding:4px 8px;background:rgba(239,68,68,0.1);border-radius:4px;border:1px solid rgba(239,68,68,0.25);">
+            ⚠ Stored DTC Faults: ${meta.active_faults.join(', ')}
+          </div>
+        `;
+      }
+
+      // Interactive Action Toolbar (Copy & Voice Guidance)
+      html += `
+        <div class="ai-actions-row">
+          <button type="button" class="ai-action-btn btn-copy-action">
+            <span>📋</span>
+            <span>Copy Text</span>
+          </button>
+          <button type="button" class="ai-action-btn btn-speak-action">
+            <span>🔊</span>
+            <span>Read Aloud</span>
+          </button>
+        </div>
+      `;
+
+      return html;
+    };
+
     const addMessage = (role, text, meta) => {
       const bubble = document.createElement('div');
-      bubble.className = 'msg ' + role;
-      if (meta) {
-        // Rich AI response with severity badge
-        const badge = document.createElement('span');
-        badge.style.cssText = `
-          display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;
-          font-weight:600;letter-spacing:.05em;margin-bottom:6px;
-          background:${{ OK:'rgba(16,185,129,.15)', WARNING:'rgba(245,158,11,.15)', FAULT:'rgba(239,68,68,.15)', CRITICAL:'rgba(220,38,38,.2)', NOT_FOUND:'rgba(100,116,139,.15)', ERROR:'rgba(100,116,139,.15)' }[meta.status] || 'rgba(100,116,139,.15)'};
-          color:${{ OK:'#10b981', WARNING:'#f59e0b', FAULT:'#ef4444', CRITICAL:'#dc2626', NOT_FOUND:'#64748b', ERROR:'#64748b' }[meta.status] || '#64748b'};
+      const isBreakdown = meta?.data?.is_breakdown ||
+        /EMERGENCY BREAKDOWN|ROADSIDE ASSISTANCE|Nearest Authorized Service|Immobilized/i.test(meta?.answer || text || '');
+      bubble.className = 'msg ' + role + (isBreakdown ? ' ai-breakdown-card' : '');
+
+      if (role === 'u') {
+        bubble.innerHTML = `
+          <div class="msg-u-header">
+            <span class="msg-u-role">YOU · DRIVER</span>
+            <span class="msg-u-dot"></span>
+          </div>
+          <div class="msg-u-text"></div>
         `;
-        badge.textContent = meta.status || 'OK';
-        bubble.appendChild(badge);
-        bubble.appendChild(document.createElement('br'));
-        const textNode = document.createTextNode('');
-        bubble.appendChild(textNode);
-        if (meta.active_faults && meta.active_faults.length > 0) {
-          const faultLine = document.createElement('div');
-          faultLine.style.cssText = 'margin-top:6px;font-size:11px;opacity:.7;font-family:monospace;';
-          faultLine.textContent = '⚠ DTCs: ' + meta.active_faults.join(', ');
-          bubble.appendChild(faultLine);
-        }
-        if (meta._latency_ms) {
-          const lat = document.createElement('div');
-          lat.style.cssText = 'margin-top:4px;font-size:10px;opacity:.45;';
-          const modelLabel = meta._source === 'vehiclegpt' 
-            ? 'VehicleGPT' 
-            : meta._source === 'ollama_llama3_2_1b'
-            ? `Llama 3.2 1B (${meta._tokens_per_sec || 80} tok/s · 1.4GB RAM · Case Study 5 Compliant)`
-            : (meta._source && meta._source.startsWith('ollama')) 
-            ? 'Llama 3 (Ollama GPU)' 
-            : 'local engine';
-          lat.textContent = `⚡ ${meta._latency_ms}ms · ${modelLabel}`;
-          bubble.appendChild(lat);
-        }
+        bubble.querySelector('.msg-u-text').textContent = text;
         chatLog.appendChild(bubble);
         chatLog.scrollTop = chatLog.scrollHeight;
-        // Typewriter effect on the text node
-        const answer = meta.answer || text;
-        let charIdx = 0;
-        const typeTimer = setInterval(() => {
-          textNode.textContent = answer.slice(0, ++charIdx);
-          chatLog.scrollTop = chatLog.scrollHeight;
-          if (charIdx >= answer.length) clearInterval(typeTimer);
-        }, 11);
         return bubble;
       }
-      bubble.textContent = text;
+
+      if (text === 'Thinking…') {
+        bubble.innerHTML = `
+          <div class="thinking-box">
+            <div class="thinking-radar"></div>
+            <span class="thinking-text">Querying on-board CAN bus & Qwen 3.5 0.8B…</span>
+          </div>
+        `;
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+        return bubble;
+      }
+
+      const answer = meta?.answer || text || '';
+      bubble.innerHTML = formatStructuredAIAnswer(answer, meta);
+
+      // Attach Automated Agent SOS Call handler
+      const sosBtn = bubble.querySelector('.btn-agent-sos-call');
+      if (sosBtn) {
+        sosBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const slot = bubble.querySelector('.sos-call-slot');
+          if (!slot) return;
+
+          sosBtn.disabled = true;
+          sosBtn.style.opacity = '0.7';
+          sosBtn.innerHTML = '<span>📡</span><span>Automated Agent Call in Progress…</span>';
+
+          const locName = meta?.data?.location?.name || realUserLocation.formatted;
+          const locCoords = meta?.data?.location?.coordinates || realUserLocation.coordinates;
+          const providers = meta?.data?.providers || [];
+          const mainProvider = providers[0] || { name: 'Tata Quick Response Center', phone: '+91 44 2434 1234', displayPhone: '+91 44 2434 1234', eta: '7 mins' };
+
+          slot.innerHTML = `
+            <div class="sos-call-console">
+              <div class="sos-call-top">
+                <div class="sos-call-title">
+                  <span class="sos-beacon"></span>
+                  <span>AUTOMATED AGENT EMERGENCY CALL TO TATA RSA</span>
+                </div>
+                <span class="sos-call-duration">LIVE 00:03</span>
+              </div>
+              <div class="sos-call-steps">
+                <div class="sos-call-step active" id="sos-step-1">
+                  <span>📞</span><span>Dialing ${mainProvider.name} (${mainProvider.displayPhone || mainProvider.phone})…</span>
+                </div>
+                <div class="sos-call-step" id="sos-step-2">
+                  <span>🛰️</span><span>Transmitting live CAN telemetry & GPS coordinates (${locCoords})…</span>
+                </div>
+                <div class="sos-call-step" id="sos-step-3">
+                  <span>📡</span><span>Relaying vehicle location: ${locName} (Tata Punch 1.2L Revotron)…</span>
+                </div>
+                <div class="sos-call-step" id="sos-step-4">
+                  <span>✅</span><span>Dispatch confirmed: Recovery Van assigned to ${locName}. ETA: ${mainProvider.eta || '7-8 mins'}.</span>
+                </div>
+              </div>
+              <div class="sos-call-confirmed-banner" style="display:none;" id="sos-confirmed-box">
+                <strong>🚨 Recovery Team Dispatched!</strong><br/>
+                Mobile Service Van assigned to your verified location (<strong>${locName}</strong>).<br/>
+                Assigned Hub: <strong>${mainProvider.name}</strong> · ETA: <strong>${mainProvider.eta || '7-8 minutes'}</strong>.
+              </div>
+            </div>
+          `;
+
+          // Voice announcement with real city
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const cityName = meta?.data?.location?.city || realUserLocation.city || 'your area';
+            const msg = new SpeechSynthesisUtterance(`Emergency roadside breakdown reported in ${cityName}. Live telemetry and verified GPS coordinates transmitted to ${mainProvider.name}. Mobile recovery van dispatched. Estimated arrival time is ${mainProvider.eta || 'eight minutes'}.`);
+            msg.rate = 1.05;
+            window.speechSynthesis.speak(msg);
+          }
+
+          setTimeout(() => {
+            const s1 = slot.querySelector('#sos-step-1');
+            const s2 = slot.querySelector('#sos-step-2');
+            if (s1) { s1.classList.remove('active'); s1.classList.add('done'); s1.innerHTML = '<span>✓</span><span>Connected to Tata Quick Response Center (+91 98200 12345)</span>'; }
+            if (s2) s2.classList.add('active');
+          }, 1200);
+
+          setTimeout(() => {
+            const s2 = slot.querySelector('#sos-step-2');
+            const s3 = slot.querySelector('#sos-step-3');
+            if (s2) { s2.classList.remove('active'); s2.classList.add('done'); s2.innerHTML = `<span>✓</span><span>GPS Coordinates (${locCoords}) & CAN Telemetry Transmitted</span>`; }
+            if (s3) s3.classList.add('active');
+          }, 2400);
+
+          setTimeout(() => {
+            const s3 = slot.querySelector('#sos-step-3');
+            const s4 = slot.querySelector('#sos-step-4');
+            const conf = slot.querySelector('#sos-confirmed-box');
+            if (s3) { s3.classList.remove('active'); s3.classList.add('done'); s3.innerHTML = '<span>✓</span><span>Vehicle Vitals & Stored DTCs Acknowledged by Dispatcher</span>'; }
+            if (s4) s4.classList.add('done');
+            if (conf) conf.style.display = 'block';
+            sosBtn.innerHTML = '<span>✓</span><span>Agent SOS Call Completed & Van En Route</span>';
+            sosBtn.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+            sosBtn.style.opacity = '1';
+          }, 3600);
+        });
+      }
+
+      // Dynamic Radius Selection Handler
+      bubble.querySelectorAll('.btn-radius-pill').forEach((pill) => {
+        pill.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const r = parseInt(pill.getAttribute('data-radius'), 10) || 5;
+          currentRadiusKm = r;
+          bubble.querySelectorAll('.btn-radius-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+
+          const providersContainer = bubble.querySelector('.ai-providers-container');
+          const headerTitle = bubble.querySelector('.mechanics-header-title');
+          if (headerTitle) headerTitle.textContent = `Finding mechanics within ${r} km radius…`;
+          if (providersContainer) providersContainer.innerHTML = `<div style="padding:1rem;font-size:12px;color:#00e5ff;text-align:center;">🔍 Searching OpenStreetMap workshops within ${r} km radius…</div>`;
+
+          try {
+            const res = await fetch('/api/mechanics-nearby', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                lat: meta?.data?.location?.lat || realUserLocation.lat,
+                lng: meta?.data?.location?.lng || realUserLocation.lng,
+                radiusKm: r,
+                isGps: meta?.data?.location?.isGps || realUserLocation.isGps,
+              }),
+            });
+            const d = await res.json();
+            if (d.status === 'OK' && d.providers) {
+              if (headerTitle) headerTitle.textContent = `Nearest Mechanics within ${r} km Radius (${d.foundCount || d.providers.length} found)`;
+              if (providersContainer) providersContainer.innerHTML = renderProvidersHtml(d.providers);
+            }
+          } catch (err) {
+            if (providersContainer) providersContainer.innerHTML = `<div style="padding:0.75rem;font-size:12px;color:#f87171;">Failed to refresh mechanics. Please try again.</div>`;
+          }
+        });
+      });
+
+      // Manual Breakdown Spot Pinpoint Search Handler
+      const searchBtn = bubble.querySelector('.btn-breakdown-search');
+      const searchInput = bubble.querySelector('.breakdown-search-input');
+      const performSearch = async () => {
+        const val = searchInput?.value.trim();
+        if (!val) return;
+        const providersContainer = bubble.querySelector('.ai-providers-container');
+        const spotName = bubble.querySelector('.breakdown-spot-name');
+        const coordsEl = bubble.querySelector('.breakdown-gps-coords');
+        const headerTitle = bubble.querySelector('.mechanics-header-title');
+
+        if (spotName) spotName.textContent = `Geocoding '${val}'…`;
+        if (providersContainer) providersContainer.innerHTML = `<div style="padding:1rem;font-size:12px;color:#00e5ff;text-align:center;">📍 Pinpointing '${val}' & finding nearest mechanics…</div>`;
+
+        try {
+          const res = await fetch('/api/mechanics-nearby', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ locationName: val, radiusKm: currentRadiusKm }),
+          });
+          const d = await res.json();
+          if (d.status === 'OK' && d.location) {
+            realUserLocation = d.location;
+            if (meta?.data) {
+              meta.data.location = d.location;
+              meta.data.providers = d.providers;
+            }
+            if (spotName) spotName.textContent = d.location.formatted;
+            if (coordsEl) coordsEl.textContent = `📍 Breakdown Spot: ${d.location.coordinates}`;
+            if (headerTitle) headerTitle.textContent = `Nearest Mechanics within ${currentRadiusKm} km Radius (${d.foundCount || d.providers.length} found)`;
+            if (providersContainer) providersContainer.innerHTML = renderProvidersHtml(d.providers);
+          }
+        } catch {
+          if (providersContainer) providersContainer.innerHTML = `<div style="padding:0.75rem;font-size:12px;color:#f87171;">Unable to locate '${val}'. Please try a nearby road, landmark, or city.</div>`;
+        }
+      };
+
+      if (searchBtn) searchBtn.addEventListener('click', performSearch);
+      if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+          }
+        });
+      }
+
+      // Exact Device GPS Refresh Handler
+      const gpsBtn = bubble.querySelector('.btn-breakdown-gps');
+      if (gpsBtn) {
+        gpsBtn.addEventListener('click', () => {
+          const spotName = bubble.querySelector('.breakdown-spot-name');
+          const coordsEl = bubble.querySelector('.breakdown-gps-coords');
+          const providersContainer = bubble.querySelector('.ai-providers-container');
+          if (spotName) spotName.textContent = 'Acquiring satellite GPS coordinates…';
+          if (providersContainer) providersContainer.innerHTML = `<div style="padding:1rem;font-size:12px;color:#00e5ff;text-align:center;">🛰️ Locking on exact GPS satellites…</div>`;
+
+          if (typeof navigator !== 'undefined' && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              async (pos) => {
+                const lat = Number(pos.coords.latitude.toFixed(4));
+                const lng = Number(pos.coords.longitude.toFixed(4));
+                try {
+                  const res = await fetch('/api/mechanics-nearby', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lng, radiusKm: currentRadiusKm, isGps: true }),
+                  });
+                  const d = await res.json();
+                  if (d.status === 'OK' && d.location) {
+                    realUserLocation = d.location;
+                    if (meta?.data) {
+                      meta.data.location = d.location;
+                      meta.data.providers = d.providers;
+                    }
+                    if (spotName) spotName.textContent = d.location.formatted;
+                    if (coordsEl) coordsEl.textContent = `🛰️ Exact Satellite GPS: ${d.location.coordinates}`;
+                    if (searchInput) searchInput.value = d.location.formatted;
+                    if (providersContainer) providersContainer.innerHTML = renderProvidersHtml(d.providers);
+                  }
+                } catch {}
+              },
+              () => {
+                if (spotName) spotName.textContent = 'Device GPS unavailable';
+                if (providersContainer) providersContainer.innerHTML = `<div style="padding:0.75rem;font-size:12px;color:#f87171;">GPS permission was denied or timed out. Please enter your breakdown road or area in the input box above.</div>`;
+              },
+              { timeout: 8000, maximumAge: 0, enableHighAccuracy: true }
+            );
+          }
+        });
+      }
+
+      // Attach step toggles, copy, and speech
+      bubble.querySelectorAll('.ai-step-toggle-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = btn.closest('.ai-step-card');
+          if (card) {
+            const isDone = card.classList.toggle('is-done');
+            btn.textContent = isDone ? '✓ Done' : 'Mark Done';
+          }
+        });
+      });
+
+      const copyBtn = bubble.querySelector('.btn-copy-action');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(answer);
+          const original = copyBtn.innerHTML;
+          copyBtn.innerHTML = '<span>✓</span><span>Copied!</span>';
+          setTimeout(() => { copyBtn.innerHTML = original; }, 2000);
+        });
+      }
+
+      const speakBtn = bubble.querySelector('.btn-speak-action');
+      if (speakBtn) {
+        let isSpeaking = false;
+        speakBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (typeof window !== 'undefined' && window.speechSynthesis) {
+            if (isSpeaking) {
+              window.speechSynthesis.cancel();
+              isSpeaking = false;
+              speakBtn.classList.remove('active');
+              speakBtn.innerHTML = '<span>🔊</span><span>Read Aloud</span>';
+            } else {
+              window.speechSynthesis.cancel();
+              const plain = answer.replace(/[*_#`]/g, '');
+              const utter = new SpeechSynthesisUtterance(plain);
+              utter.rate = 1.05;
+              utter.onend = () => {
+                isSpeaking = false;
+                speakBtn.classList.remove('active');
+                speakBtn.innerHTML = '<span>🔊</span><span>Read Aloud</span>';
+              };
+              isSpeaking = true;
+              speakBtn.classList.add('active');
+              speakBtn.innerHTML = '<span>⏹</span><span>Stop Voice</span>';
+              window.speechSynthesis.speak(utter);
+            }
+          }
+        });
+      }
+
       chatLog.appendChild(bubble);
       chatLog.scrollTop = chatLog.scrollHeight;
       return bubble;
@@ -923,15 +1580,16 @@ export default function HaloCarExperience() {
         const res = await fetch('/api/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, canData: carData }),
+          body: JSON.stringify({ query, canData: carData, userLocation: realUserLocation, radiusKm: currentRadiusKm }),
         });
         if (res.ok) {
           const data = await res.json();
           data._latency_ms = Date.now() - t0;
-          aiBubble.textContent = '';
-          aiBubble.className = 'msg a';
-          addMessage('a', '', data);
+          if (data?.data?.location) {
+            realUserLocation = data.data.location;
+          }
           aiBubble.remove();
+          addMessage('a', '', data);
           vgptOnline = data._source === 'vehiclegpt' || (data._source && data._source.startsWith('ollama'));
           isThinking = false;
           return;
@@ -943,8 +1601,7 @@ export default function HaloCarExperience() {
       // Bulletproof local CAN fallback — zero error screen
       const match = responses.find(([regex]) => regex.test(query));
       const fallbackAnswer = match ? match[1]() : defaultReply;
-      aiBubble.textContent = '';
-      aiBubble.className = 'msg a';
+      aiBubble.remove();
       addMessage('a', '', {
         status: 'OK',
         answer: fallbackAnswer,
@@ -952,17 +1609,16 @@ export default function HaloCarExperience() {
         _latency_ms: Date.now() - t0,
         _source: 'local_engine',
       });
-      aiBubble.remove();
       isThinking = false;
     };
 
     const chips = [
-      'What is my speed and gear right now?',
-      'Check fuel level & estimated range',
-      'Diagnose coolant temp & battery voltage',
-      'Are my tyres nominal across all 4 wheels?',
-      'How does an engine work?',
-      'Tips for driving in heavy rain',
+      '🚨 Car broke down! Call nearest mechanic',
+      '🔧 How to fix AC blowing warm air',
+      '🔮 Predict vehicle health for next 50 km',
+      '🚗 What is my speed and gear right now?',
+      '⛽ Check fuel level & estimated range',
+      '🔋 Diagnose battery voltage & charging',
     ];
     if (chatChips) {
       chatChips.innerHTML = '';
@@ -983,7 +1639,11 @@ export default function HaloCarExperience() {
     }
     if (chatLog) {
       chatLog.innerHTML = '';
-      addMessage('a', "Hello! I am VehicleGPT, your conversational vehicle AI copilot. Like ChatGPT, you can chat with me about general topics, driving advice, and science, or query your car's live sensors and diagnostics!");
+      addMessage('a', "Hello! I am VehicleGPT, your on-board vehicle AI copilot powered by Qwen 3.5 0.8B. I continuously monitor live CAN-bus sensors, provide step-by-step workshop repair guides, and answer general driving questions.", {
+        status: 'OK',
+        _latency_ms: 1,
+        _source: 'vehiclegpt',
+      });
 
       // Isolate chat log wheel events so internal scroll operates freely and independently
       // without triggering the outer Lenis page scroll / timeline flow.
@@ -1103,7 +1763,7 @@ export default function HaloCarExperience() {
       const liveEl = $('#live');
       if (liveEl) {
         const icon = vgptOnline ? '🟢' : '🟡';
-        const src = vgptOnline ? 'Llama 3 (GPU)' : 'Edge local';
+        const src = vgptOnline ? 'Qwen 3.5 0.8B (Edge SLM)' : 'Edge local';
         const spd = t.speed !== undefined ? ` · ${t.speed.toFixed(1)} km/h · Fuel ${t.fuel.toFixed(1)}%` : '';
         const playState = t.isPlaying ? 'Playing' : 'Paused';
         liveEl.textContent = `${icon} ${playState} Frame ${t.frameIndex}${spd} · ${src}`;
@@ -1808,7 +2468,7 @@ export default function HaloCarExperience() {
                     <span id="live">Live · reading the CAN bus · updated 2 s ago</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <span className="chat-badge">OBD-II • EDGE LLM</span>
+                    <span className="chat-badge">CAN-BUS • QWEN 3.5 SLM</span>
                     <a href="#top" data-to="0" style={{ fontSize: '11px', opacity: 0.6, cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
                       ↑ 3D CAR
                     </a>

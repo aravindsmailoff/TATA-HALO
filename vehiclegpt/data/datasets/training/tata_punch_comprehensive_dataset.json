@@ -1,0 +1,62 @@
+[
+  {
+    "instruction": "Tell me about my car. What kind of car is this?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"You are driving a Tata Punch, a popular sub-compact SUV built on Tata's ALFA-ARC platform with a 5-Star Global NCAP safety rating. It features a 1.2L Revotron 3-cylinder petrol engine producing 86 PS power, a 37-liter fuel tank, 187 mm ground clearance, and 366 liters of boot space.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "What is the recommended tyre pressure for the Tata Punch?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"The recommended tyre pressure for your Tata Punch is 32 to 33 psi for all four tyres under normal load. If fully loaded with passengers and luggage, you can increase the rear tyres to 35 psi.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 32.0}"
+  },
+  {
+    "instruction": "How do I jump-start my car if the 12V battery dies?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"To jump-start: 1) Connect RED cable to positive (+) of both batteries. 2) Connect BLACK cable to helper battery negative (-) and your car's unpainted metal frame bolt. 3) Run helper car 3 minutes, then start your Punch. 4) Disconnect in reverse order and drive 20-30 minutes to recharge.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "How do I change a flat tyre on my Tata Punch?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"To change a tyre: 1) Park on flat ground and pull handbrake. 2) Loosen lug nuts 1/2 turn with the spanner. 3) Place jack at the reinforced sill notch and lift car 2-3 inches. 4) Remove nuts, swap on spare wheel, hand-tighten nuts, lower jack, and firmly tighten nuts in a star pattern.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "How do I check my engine oil level?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"With the engine turned off and cold, pull the bright yellow dipstick under the bonnet. Wipe it clean with a cloth, push it all the way back in, and pull it again. The oil film should be between the MIN and MAX marks. If near MIN, top up with 5W-30 synthetic oil.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "Why is my check engine light on?",
+    "input": "DTC_P0130=ACTIVE",
+    "output": "{\"status\": \"WARNING\", \"answer\": \"The check engine light turned on because the sensor detected an issue (fault code P0130 related to the oxygen sensor). If the light is steady, check that your fuel cap is tightened with 3 clicks and drive gently to a service center. If flashing, pull over immediately.\", \"severity\": \"MEDIUM\", \"timestamp\": \"\", \"active_faults\": [\"P0130\"], \"data\": null}"
+  },
+  {
+    "instruction": "Explain engine coolant temperature to me like I am 5 years old.",
+    "input": "ENGINE_COOLANT_TEMP=88.0 celsius",
+    "output": "{\"status\": \"OK\", \"answer\": \"Think of coolant like cold water you drink on a hot summer day. Your engine drinks special coolant fluid so it doesn't get too hot while working hard. Right now it is sitting happily at 88°C, which is a perfect, cozy temperature for your car!\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 88.0}"
+  },
+  {
+    "instruction": "What should I do if my tyre pressure is low?",
+    "input": "TIRE_PRESSURE_RR=27.5 psi",
+    "output": "{\"status\": \"WARNING\", \"answer\": \"Your rear-right tyre is at 27.5 psi, which is below the recommended 32 psi. You can still drive at moderate speeds, but stop by the nearest petrol pump air station to top it up to 32 psi and check for a slow puncture.\", \"severity\": \"MEDIUM\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 27.5}"
+  },
+  {
+    "instruction": "When is my next routine service due?",
+    "input": "ODOMETER=13800 km",
+    "output": "{\"status\": \"OK\", \"answer\": \"Tata Punch requires periodic servicing every 15,000 km or 12 months. Since your car is currently at 13,800 km, your 3rd major service (oil change, oil filter, and general inspection) is due in approximately 1,200 km.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 13800.0}"
+  },
+  {
+    "instruction": "Hi, who are you and what can you help me with?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"Hello! I am VehicleGPT, your friendly on-device car companion. Like ChatGPT, you can ask me anything from everyday conversation and driving tips to live vehicle dials and complete step-by-step DIY repair guides. How can I help you today?\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "How can I improve my car's fuel mileage?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"To get the best mileage in your Tata Punch: 1) Keep tyres inflated to 32 psi. 2) Drive smoothly between 40-70 km/h in the highest gear possible. 3) Avoid sudden acceleration and heavy braking. 4) Use the ECO driving mode on highways. 5) Turn off the AC on cool mornings.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "What happens if a fuse blows in my car?",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"When a fuse blows, whatever electrical part it protects (like the horn, cabin lights, or USB port) stops working to protect the car from short circuits. You can easily replace it using the spare fuses and puller clip located in the fuse box under the driver's dashboard.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  }
+]

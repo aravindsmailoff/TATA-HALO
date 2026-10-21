@@ -7,6 +7,7 @@
 const { spawn, execSync } = require('child_process');
 const path = require('path');
 const os = require('os');
+const fs = require('fs');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const VEHICLEGPT_DIR = path.join(ROOT_DIR, 'vehiclegpt');
@@ -59,6 +60,17 @@ console.log(`${CYAN}${BOLD}=====================================================
 // Free up ports before launch to guarantee port 3000
 freePort(3000);
 freePort(8765);
+
+// Clean stale .next build cache to prevent chunk mismatch errors (MODULE_NOT_FOUND)
+const nextDir = path.join(ROOT_DIR, '.next');
+try {
+  if (fs.existsSync(nextDir)) {
+    console.log(`${YELLOW}Cleaning stale .next cache...${RESET}`);
+    fs.rmSync(nextDir, { recursive: true, force: true });
+  }
+} catch (e) {
+  // Ignore file locks if any
+}
 
 let pythonProc = null;
 let nextProc = null;
