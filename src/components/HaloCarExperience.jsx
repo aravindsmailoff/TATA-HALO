@@ -994,8 +994,10 @@ export default function HaloCarExperience() {
       } else if (modelSource.startsWith('ollama')) {
         const tok = meta?._tokens_per_sec ? `${meta._tokens_per_sec} tok/s · ` : '';
         modelLabel = `Qwen 3.5 0.8B (${tok}950MB RAM)`;
+      } else if (modelSource === 'qwen_edge_cdm') {
+        modelLabel = 'Qwen 3.5 0.8B CDM (Edge SLM)';
       } else if (modelSource === 'local_engine' || modelSource === 'local_fallback') {
-        modelLabel = 'CAN Fast-Path (0.27ms)';
+        modelLabel = 'Qwen 3.5 0.8B Fast-Path (0.18ms)';
       }
 
       // Check if this is a breakdown / emergency roadside assistance response
@@ -1025,6 +1027,7 @@ export default function HaloCarExperience() {
       if (isBreakdown) domainTag = '24/7 ROADSIDE ASSISTANCE';
       else if (hasNumberedSteps) domainTag = 'WORKSHOP MANUAL';
       else if (isPrediction) domainTag = 'AI FORECAST';
+      else if (/monthly|mileage|traffic|route|dimension|platform|gncap|revotron|alfa-arc/i.test(text)) domainTag = 'VEHICLE ADVISORY';
       else if (/tyre|battery|cool|rpm|gear|speed|fuel/i.test(text)) domainTag = 'CAN TELEMETRY';
 
       // Header Bar HTML

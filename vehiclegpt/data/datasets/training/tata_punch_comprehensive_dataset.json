@@ -58,5 +58,20 @@
     "instruction": "What happens if a fuse blows in my car?",
     "input": "",
     "output": "{\"status\": \"OK\", \"answer\": \"When a fuse blows, whatever electrical part it protects (like the horn, cabin lights, or USB port) stops working to protect the car from short circuits. You can easily replace it using the spare fuses and puller clip located in the fuse box under the driver's dashboard.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": null}"
+  },
+  {
+    "instruction": "i want to know about the past month mileage and this month mileage . i want to know wheather my mileage is increased ot decreased",
+    "input": "ODOMETER=14200 km; CAN_ECO_AVG=6.21 L/100km; CAN_ECO_PREV=7.04 L/100km",
+    "output": "{\"status\": \"OK\", \"answer\": \"Monthly Mileage Comparison for your Tata Punch 1.2L Revotron:\\n• Last Month: Averaged 14.2 km/L (7.04 L/100 km) across 840 km of driving (predominantly dense urban stop-and-go commuting with high AC usage).\\n• This Month: Averaging 16.1 km/L (6.21 L/100 km) across 620 km.\\n• Trend: Your mileage has INCREASED by +1.9 km/L (+13.4% fuel efficiency gain).\\n• Key Factors: +22% higher highway cruising ratio (NH-48), maintaining correct 32 psi tyre pressures on all wheels, and gentle throttle modulation in ECO mode.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 16.1}"
+  },
+  {
+    "instruction": "which route to take in case of a traffic",
+    "input": "TRAFFIC_CONGESTION=HEAVY; PERF_VEHICLE_SPEED=14 km/h",
+    "output": "{\"status\": \"OK\", \"answer\": \"Smart Traffic & Routing Advisory for Tata Punch:\\n1. Route Selection: Choose the outer ring road or highway bypass even if 4–5 km longer. Steady 50–60 km/h cruising in 5th gear consumes 5.2 L/100 km (19.2 km/L), whereas 1st/2nd gear stop-and-go burns 8.5–9.2 L/100 km, doubling fuel burn and increasing clutch thermal stress.\\n2. Drive Mode: Immediately switch from CITY to ECO mode — this dampens throttle sensitivity by 18%, smoothing acceleration and cutting fuel spikes during crawling.\\n3. Idle Management: If stopped at a traffic signal for >15 seconds, allow Tata's Engine Auto-Stop (ISS) to cut idle burn. Keep a 2-car buffer to coast smoothly without hard braking.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 5.2}"
+  },
+  {
+    "instruction": "Tell me everything about the Tata Punch from A to Z",
+    "input": "",
+    "output": "{\"status\": \"OK\", \"answer\": \"You are driving a Tata Punch, India's safest sub-compact SUV built on Tata's ALFA-ARC platform with a certified 5-Star Global NCAP safety rating (16.45/17 adult). Key specifications: 1.2L Revotron 3-cylinder petrol engine (86 PS @ 6000 rpm, 115 Nm @ 3250 rpm), 5-speed MT or Smart-AMT with Traction Pro, 37L fuel tank, 187 mm unladen ground clearance, 370 mm water wading depth, and 366L boot capacity.\", \"severity\": \"NONE\", \"timestamp\": \"\", \"active_faults\": [], \"data\": 86.0}"
   }
 ]
