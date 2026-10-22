@@ -2469,6 +2469,7 @@ export default function HaloCarExperience() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                     <span className="chat-badge">CAN-BUS • QWEN 3.5 SLM</span>
+                    <span className="chat-badge" style={{ background: 'linear-gradient(135deg,rgba(16,185,129,.18),rgba(5,150,105,.12))', border: '1px solid rgba(16,185,129,.35)', color: '#6ee7b7', letterSpacing: '.04em' }} title="Constrained Decoding Model v1.0 — schema-enforced structured LLM output">CDM v1.0 ✓</span>
                     <a href="#top" data-to="0" style={{ fontSize: '11px', opacity: 0.6, cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
                       ↑ 3D CAR
                     </a>

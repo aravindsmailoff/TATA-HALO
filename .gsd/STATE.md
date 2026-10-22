@@ -30,3 +30,35 @@
 
 ## ⚠️ Known Blockers / Risks
 - None. All compile targets passing with zero errors (479 modules).
+
+---
+
+## 🧠 CDM Wave Summary — Constrained Decoding Model v1.0
+
+**Objective:** Replace the fragile `indexOf('{')` JSON-scraping approach with a true grammar-constrained LLM output layer.
+
+**Changes:**
+- `src/lib/cdm/schema.js` — `RESPONSE_SCHEMA` (JSON Schema), `normalizeTelemetryFrame()`, `cdmToLLMContext()`, `validateResponse()`
+- `src/lib/cdm/decoder.js` — `buildConstrainedPayload()` (injects `format: RESPONSE_SCHEMA` into Ollama), `decodeConstrainedResponse()`, `synthesizeFallback()`, `callConstrainedDecoding()`
+- `src/app/api/telemetry/route.js` — All GET/POST responses wrapped through `normalizeTelemetryFrame()`, `X-CDM-Version: 1.0` header on every response
+- `src/app/api/query/route.js` — Ollama path replaced: `format: RESPONSE_SCHEMA` constrained decoding, local fallback wrapped in `synthesizeFallback()` for uniform shape
+- `src/components/HaloCarExperience.jsx` — `CDM v1.0 ✓` emerald badge added to cockpit chat status bar
+
+**Verification:**
+- `GET /api/telemetry` → CDMFrame with `cdm_version: "1.0"` + `X-CDM-Version: 1.0` header
+- `POST /api/query` → `_source: "ollama_cdm"`, `_cdm_version: "1.0"`, no JSON scraping
+- Local fallback → same shape via `synthesizeFallback()`
+
+**Key CDM mechanism:**
+```json
+{
+  "model": "vehiclegpt",
+  "format": { /* RESPONSE_SCHEMA — full JSON Schema object */ },
+  "options": { "temperature": 0.05, "num_predict": 180 }
+}
+```
+The Ollama sampler assigns `p=0` to any token that would break schema validity before softmax — output is structurally guaranteed.
+
+**Next Wave TODO:**
+- Add `persistFrame(cdmFrame)` to write session frames to `datasets/session_log.jsonl` for replay analytics
+

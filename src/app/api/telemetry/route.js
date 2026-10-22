@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import { normalizeTelemetryFrame } from '@/lib/cdm/schema.js';
+
+/** CDM response headers applied to every telemetry response */
+const CDM_HEADERS = { 'X-CDM-Version': '1.0', 'X-CDM-Source': 'can_replay' };
 
 let cachedFrames = null;
 let currentFrameIndex = 0;
@@ -134,7 +138,8 @@ function formatFrameResponse() {
 
 export async function GET() {
   advanceClock();
-  return Response.json(formatFrameResponse());
+  const frame = normalizeTelemetryFrame(formatFrameResponse());
+  return Response.json(frame, { headers: CDM_HEADERS });
 }
 
 export async function POST(request) {
@@ -160,7 +165,7 @@ export async function POST(request) {
       lastTickTime = Date.now();
     }
 
-    return Response.json(formatFrameResponse());
+    return Response.json(normalizeTelemetryFrame(formatFrameResponse()), { headers: CDM_HEADERS });
   } catch (err) {
     return Response.json({ error: 'Invalid request' }, { status: 400 });
   }
