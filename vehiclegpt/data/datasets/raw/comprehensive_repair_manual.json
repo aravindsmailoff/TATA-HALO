@@ -72,12 +72,12 @@
   {
     "topic": "Engine Overheating in Traffic or Highway Emergency Action",
     "category": "COOLING",
-    "guide": "Repair Tip for Engine Overheating: 1. If coolant temp exceeds 100\u00b0C or warning light turns ON, turn OFF the Air Conditioner immediately and turn ON the cabin heater to maximum fan speed. This pulls heat away from the engine block into the heater core. 2. Pull over safely to the shoulder, put in Neutral/Park, and let engine idle for 1-2 minutes before shutting off so coolant continues circulating. 3. NEVER open the radiator or expansion tank cap while the engine is hot. Wait at least 20-30 minutes until pressure subsides. 4. Check for leaking radiator hoses or broken fan belt. If coolant level is low, refill with 50/50 ethylene glycol coolant or clean water in an emergency."
+    "guide": "Repair Tip for Engine Overheating: 1. If coolant temp exceeds 100°C or warning light turns ON, turn OFF the Air Conditioner immediately and turn ON the cabin heater to maximum fan speed. This pulls heat away from the engine block into the heater core. 2. Pull over safely to the shoulder, put in Neutral/Park, and let engine idle for 1-2 minutes before shutting off so coolant continues circulating. 3. NEVER open the radiator or expansion tank cap while the engine is hot. Wait at least 20-30 minutes until pressure subsides. 4. Check for leaking radiator hoses or broken fan belt. If coolant level is low, refill with 50/50 ethylene glycol coolant or clean water in an emergency."
   },
   {
     "topic": "Rough Idling or Engine Misfire Diagnosis & Spark Plugs",
     "category": "IGNITION",
-    "guide": "Repair Tip for Rough Engine Idling or Misfires: 1. Common symptoms: Shaking steering wheel at idle, hesitating during acceleration, check engine light blinking (DTC P0300-P0303). 2. Check spark plugs: Recommended replacement every 30,000 to 40,000 km. Inspect electrode tip for black carbon buildup (rich mix) or wet fuel fouling. Electrode gap should be 0.8\u20130.9 mm. 3. Ignition Coils: Ensure coil pack connectors are tightly clipped. Swap coil between cylinders to see if misfire code follows the coil. 4. Throttle Body: Clean carbon deposits around throttle butterfly valve with aerosol throttle body cleaner spray."
+    "guide": "Repair Tip for Rough Engine Idling or Misfires: 1. Common symptoms: Shaking steering wheel at idle, hesitating during acceleration, check engine light blinking (DTC P0300-P0303). 2. Check spark plugs: Recommended replacement every 30,000 to 40,000 km. Inspect electrode tip for black carbon buildup (rich mix) or wet fuel fouling. Electrode gap should be 0.8–0.9 mm. 3. Ignition Coils: Ensure coil pack connectors are tightly clipped. Swap coil between cylinders to see if misfire code follows the coil. 4. Throttle Body: Clean carbon deposits around throttle butterfly valve with aerosol throttle body cleaner spray."
   },
   {
     "topic": "Car Won't Crank or Start Diagnostic Tree",
@@ -92,7 +92,7 @@
   {
     "topic": "Steering Wheel Vibration & Pulling Inspection",
     "category": "SUSPENSION",
-    "guide": "Repair Tip for Steering Wheel Vibration or Pulling: 1. Vibration felt at 80\u2013110 km/h: Front wheel dynamic imbalance. Wheel weights have fallen off or rims have slight bend. Requires dynamic wheel balancing on shop balancer. 2. Vibration felt during braking only: Warped front brake disc rotors caused by excessive heat or uneven caliper guide pin sliding. Rotors must be resurfaced or replaced. 3. Car pulls to left or right when driving straight on flat road: Front wheel alignment (toe-in / camber) is off, or front tyre pressure is unequal (e.g. 26 psi left vs 33 psi right)."
+    "guide": "Repair Tip for Steering Wheel Vibration or Pulling: 1. Vibration felt at 80–110 km/h: Front wheel dynamic imbalance. Wheel weights have fallen off or rims have slight bend. Requires dynamic wheel balancing on shop balancer. 2. Vibration felt during braking only: Warped front brake disc rotors caused by excessive heat or uneven caliper guide pin sliding. Rotors must be resurfaced or replaced. 3. Car pulls to left or right when driving straight on flat road: Front wheel alignment (toe-in / camber) is off, or front tyre pressure is unequal (e.g. 26 psi left vs 33 psi right)."
   },
   {
     "topic": "Dead Key Fob Battery Emergency Start & Replacement",
@@ -103,5 +103,50 @@
     "topic": "Windshield Wiper Smearing & Blade Replacement",
     "category": "MAINTENANCE",
     "guide": "Repair Tip for Wiper Blade Smearing: 1. Streaking or chattering wipers: Clean rubber squeegee blade with a microfiber cloth dipped in rubbing alcohol or washer fluid to remove road grease and sap. 2. Blade Replacement: Lift wiper arm away from glass, press the small plastic release tab on the J-hook, and slide blade down toward bonnet to detach. Slide new 24-inch driver / 16-inch passenger blade on until audible click. 3. Washer Nozzle Clogged: Use a thin sewing pin or needle to unblock the nozzle hole on cowl panel and adjust spray angle."
+  },
+  {
+    "topic": "Tata Nexon Engine & Transmission Technical Specifications",
+    "category": "TECHNICAL_SPECIFICATIONS",
+    "guide": "Engines: 1.2L Revotron (RVT) Petrol 1198 cc, 110 PS @ 5000 RPM, 170 Nm torque @ 1750-4000 RPM. 1.5L Revotorq (RTQ) Diesel 1497 cc, 110 PS @ 3750 RPM, 260 Nm torque @ 1500-2750 RPM. Transmissions: 6-speed manual TA6300 synchromesh and 6-speed Automated Manual Transmission (AMT) with kick-down feature. Fuel Tank: 44 Litres. Battery: 12V 44Ah DIN 55 with 110A alternator."
+  },
+  {
+    "topic": "Tata Nexon Dimensions & Ground Clearance",
+    "category": "TECHNICAL_SPECIFICATIONS",
+    "guide": "Dimensions: Length 3,994 mm, Width 1,811 mm, Height 1,607 mm, Wheelbase 2,498 mm. Turning Circle Diameter: 10.2 meters. Ground Clearance: 165 mm (laden, 195/60 R16 tyres), 184 mm (laden, 215/60 R16 tyres), 209 mm (unladen). Brakes: Front Disc, Rear Drum, ABS with EBD and CSC (Corner Stability Control)."
+  },
+  {
+    "topic": "Tata Drive Modes Operation: Eco, City, Sport",
+    "category": "DRIVING_SYSTEMS",
+    "guide": "Tata multi-drive mode system: 1) ECO Mode: Smooths throttle curve and optimizes fuel economy for open highway cruising. 2) CITY Mode: Default mode balancing drivability and comfort for stop-and-go urban commutes. 3) SPORT Mode: Instant throttle response and peak torque output (170 Nm petrol / 260 Nm diesel) for spirited driving and highway overtakes."
+  },
+  {
+    "topic": "Tata Recommended Lubricants and Fluid Grades",
+    "category": "MAINTENANCE_FLUIDS",
+    "guide": "Engine Oil: 5W-30 ACEA A5/B5 (Castrol Magnatec Professional T 5W30 or Mobil Super 3000 TMGO 5W30), 3.5 Litres for Petrol 1.2RVT, 5.0 Litres for Diesel 1.5RTQ. Coolant: JIS K2234 / Class II premixed ethylene glycol 50:50 ratio (5.5L). Brake Fluid: DOT 4 SAE J 1703. Key Fob Battery: CR 2032 3V coin cell."
+  },
+  {
+    "topic": "Case Study 5: Driving Range Reduction Diagnosis",
+    "category": "PREDICTIVE_ANALYTICS",
+    "guide": "Driving range reduction causes: 1) Under-inflated tyres (dropping below 30 psi increases rolling resistance by 4-6%). 2) High-RPM accelerations and aggressive overtaking in low gears. 3) Continuous AC operation in dense traffic. 4) Clogged engine air filter or fuel injector deposits causing sub-optimal stoichiometric combustion."
+  },
+  {
+    "topic": "Case Study 5: Telemetry Anomaly & Fuel Efficiency Drop Analysis",
+    "category": "PREDICTIVE_ANALYTICS",
+    "guide": "In sample_drive.csv telemetry, the highest fuel burn occurred during rapid acceleration transitions where RPM reached 3304 RPM at 98 km/h, spiking instantaneous fuel consumption to 11.4 L/100 km compared to 5.8 L/100 km during 65 km/h steady cruise."
+  },
+  {
+    "topic": "Case Study 5: ADAS Disengagement Protocol & Diagnostics",
+    "category": "ADAS_SAFETY",
+    "guide": "ADAS disengagement sequence: Optical camera vision blocked by heavy monsoon spray or low sun glare causes automatic disengagement of Lane Keep Assist (LKA) and Adaptive Cruise Control (ACC), issuing an audible chime and amber cluster icon while returning lateral steering control to the driver."
+  },
+  {
+    "topic": "Case Study 5: Battery Overheat Pre-Event Analysis",
+    "category": "PREDICTIVE_ANALYTICS",
+    "guide": "Before battery overheat warning: Engine compartment temperature elevates to 41°C, coolant reaches 93.3°C, and alternator floats at 14.34V under heavy electrical load (FATC max blower + headlights + defogger), gradually elevating battery internal temperature past 58°C triggering DTC P0A7F."
+  },
+  {
+    "topic": "Case Study 5: City vs Highway Energy Consumption Comparison",
+    "category": "ENERGY_ANALYSIS",
+    "guide": "City driving consumption is 7.8-8.5 L/100 km (12.2 km/L) due to frequent braking, start-stop cycles, and lower gear ratios. Highway cruising in 5th/6th gear at 75-85 km/h consumes 5.6-6.2 L/100 km (16.9 km/L), saving over 28% energy through optimal thermal efficiency and steady momentum."
   }
 ]

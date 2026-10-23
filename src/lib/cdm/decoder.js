@@ -152,9 +152,9 @@ export function synthesizeFallback(fallbackResult) {
     answer:         typeof fb.answer === 'string' ? fb.answer.trim() : 'Query processed by local engine.',
     severity,
     active_faults:  Array.isArray(fb.active_faults) ? fb.active_faults : [],
-    metric_value:   typeof fb.data === 'number' ? fb.data : null,
-    metric_unit:    null,
-    recommendation: null,
+    metric_value:   typeof fb.metric_value === 'number' ? fb.metric_value : (typeof fb.data === 'number' ? fb.data : null),
+    metric_unit:    typeof fb.metric_unit === 'string' ? fb.metric_unit : null,
+    recommendation: typeof fb.recommendation === 'string' ? fb.recommendation : null,
   };
 }
 

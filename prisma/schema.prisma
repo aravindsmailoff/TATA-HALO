@@ -1,0 +1,89 @@
+// Prisma schema for Automotive Lifecycle & Digital Twin Events
+// Grouped by Month with Cascade Aggregations
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model MonthlyLog {
+  id              String            @id @default(cuid())
+  month           String            @unique // e.g. "2026-10", "2026-04", "2023-09"
+  year            Int
+  monthNumber     Int
+  totalServices   Int               @default(0)
+  totalParts      Int               @default(0)
+  totalCostInr    Float             @default(0.0)
+  hasBreakdown    Boolean           @default(false)
+  summary         String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  services        ServiceRecord[]
+  partsReplaced   PartReplacement[]
+  events          TimelineEvent[]
+  breakdowns      BreakdownEvent[]
+}
+
+model ServiceRecord {
+  id              String      @id
+  date            String      // e.g. "2026-04-04"
+  monthKey        String      // matches MonthlyLog.month
+  odometerKm      Float
+  provider        String
+  providerType    String      // OEM_AUTHORIZED | INDEPENDENT_WORKSHOP | DIY
+  totalCostInr    Float
+  itemsBilled     String      // JSON stringified list
+  qualityFlag     String
+  findings        String
+
+  monthlyLog      MonthlyLog  @relation(fields: [monthKey], references: [month], onDelete: Cascade)
+}
+
+model PartReplacement {
+  id              String      @id
+  partName        String
+  serviceId       String
+  date            String
+  monthKey        String      // matches MonthlyLog.month
+  odometerKm      Float
+  system          String
+  specConformant  Boolean
+  oemSpec         String
+  installedSpec   String
+  reason          String
+
+  monthlyLog      MonthlyLog  @relation(fields: [monthKey], references: [month], onDelete: Cascade)
+}
+
+model TimelineEvent {
+  id              String      @id
+  timestamp       String
+  monthKey        String      // matches MonthlyLog.month
+  odometerKm      Float
+  category        String      // service, refuel, dtc, warning_lamp, incident, breakdown
+  severity        String      // info, low, medium, high, critical
+  title           String
+  detail          String
+
+  monthlyLog      MonthlyLog  @relation(fields: [monthKey], references: [month], onDelete: Cascade)
+}
+
+model BreakdownEvent {
+  id                 String      @id
+  date               String      // "2026-10-23"
+  monthKey           String      // matches MonthlyLog.month
+  odometerKm         Float
+  rootCause          String
+  peakCoolantTempC   Float
+  finalOilLevelPct   Float
+  oilPressureKpa     Float
+  seizedCylinders    String      // "3, 4"
+  ruledOut           String      // "Floodwater, Low oil starvation, 12V battery, Fuel contamination"
+
+  monthlyLog         MonthlyLog  @relation(fields: [monthKey], references: [month], onDelete: Cascade)
+}

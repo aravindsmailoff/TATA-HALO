@@ -1,0 +1,148 @@
+{
+  "case_question": "My car ran very smoothly last month and today I got an engine failure. What exactly caused the engine failure?",
+  "verdict": "Engine failed from cooling-system failure -> repeated overheating -> head-gasket breach -> coolant diluting the oil -> loss of oil pressure and rod-bearing seizure (cyl 3/4). Not oil starvation, not flood water, not battery, not fuel.",
+  "root_cause_chain": [
+    {
+      "step": 1,
+      "when": "2026-04-04",
+      "what": "Cooling system degraded at a non-OEM 30k service (QuickFix): coolant flush billed but not done (no level/quality change in data, 55-min visit), topped up with ~1.1 L tap water + 0.4 L concentrate, OEM 1.1 bar radiator cap replaced with 0.9 bar universal cap, 15W-40 CF-4 oil instead of 5W-30 C3.",
+      "evidence": [
+        "SVC016",
+        "PRT010-PRT015",
+        "coolant_level_pct_am shows no step on 2026-04-04",
+        "dpf_regens interval shortens after 04-04 (wrong oil)"
+      ]
+    },
+    {
+      "step": 2,
+      "when": "2026-05-24..2026-10-15",
+      "what": "Low-boiling-margin cooling system vents coolant on hot/loaded runs; water-pump seal weeps slowly from July; coolant level declines ~0.2 %/day; temperature margins shrink.",
+      "evidence": [
+        "daily.coolant_level_pct_am",
+        "trips.coolant_max_c trend",
+        "events: Yercaud ghat 104.6 C 2026-05-24",
+        "events: traffic overheat 2026-09-03 109 C (P0217), cleared by owner 2026-09-04"
+      ]
+    },
+    {
+      "step": 3,
+      "when": "2026-10-14",
+      "what": "Low-coolant lamp (level < 70 %) and P2181 appear; owner ignores 2 days then tops up with plain tap water on 2026-10-16 and 2026-10-20 - treating the symptom, hiding the leak, further diluting glycol.",
+      "evidence": [
+        "lamps",
+        "DTC P2181",
+        "services SVC029, SVC030"
+      ]
+    },
+    {
+      "step": 4,
+      "when": "2026-10-15",
+      "what": "Second overheat (107 C) in stop-go traffic; P0217 stored. From 2026-10-17 oil level starts rising (coolant ingress) and hot-idle oil pressure drifts down.",
+      "evidence": [
+        "daily.oil_level_pct_am 2026-10-17..22",
+        "daily.oil_pressure_hot_idle_kpa"
+      ]
+    },
+    {
+      "step": 5,
+      "when": "2026-10-22 16:50-17:12",
+      "what": "Highway jam, AC on: coolant peaks 118.6 C at 16:58; ~37 min above 105 C; reservoir boils over 87.5 -> 56.9 %. Owner kept driving ~2 h on red warning. Head gasket breached; coolant enters oil and cylinders.",
+      "evidence": [
+        "trips_highres H4_vellore_back",
+        "DTC P0217 confirmed",
+        "lamps red coolant temp 2026-10-22"
+      ]
+    },
+    {
+      "step": 6,
+      "when": "2026-10-23 07:42-07:48",
+      "what": "Cold start: white smoke, misfires cyl 3/4, oil level 110 %+, oil pressure collapses from ~210 to <40 kPa within 3 minutes under load (~1.4 km, 4.5 min after key-on), knock rises, coolant sensor reads steam (~32 -> 118 C in ~37 s), engine stalls and will not turn (rod bearing seized).",
+      "evidence": [
+        "failure_trip_1hz.csv",
+        "DTC P0300/P0303/P0304/P0524/P0335"
+      ]
+    }
+  ],
+  "contributing_factors": [
+    "Non-OEM radiator cap 0.9 bar",
+    "Tap-water dilution of coolant",
+    "Billed-but-not-performed coolant flush",
+    "Wrong oil grade (CF-4 15W-40) accelerating DPF loading and raising cold oil pressure ~8%",
+    "Ignored low-coolant lamp for 9 days",
+    "Owner cleared P0217 history on 2026-09-04",
+    "Missed inspection chance at brake job 2026-08-02",
+    "Continued driving on red temperature warning"
+  ],
+  "ruled_out": [
+    {
+      "hypothesis": "Flood water ingestion (2025-11-08)",
+      "verdict": "No",
+      "why": "Dry air filter, no DTC, oil level/pressure normal for 11 months afterwards"
+    },
+    {
+      "hypothesis": "Oil starvation from low oil level",
+      "verdict": "No (inverse)",
+      "why": "Oil level ROSE to ~110 % in last week (coolant ingress); oil pressure only fell after contamination"
+    },
+    {
+      "hypothesis": "Battery / electrical (Feb replacement)",
+      "verdict": "No",
+      "why": "Dashcam parasitic draw already fixed 2026-02-18; cranking V normal since; P0562 history only"
+    },
+    {
+      "hypothesis": "Bad fuel / water in diesel (Aug)",
+      "verdict": "No",
+      "why": "Resolved 2026-08-18 (drain); injector corrections back to normal by 2026-08-19"
+    },
+    {
+      "hypothesis": "A/C problem (March)",
+      "verdict": "No",
+      "why": "Repaired 2026-03-10; only minor extra heat load afterwards"
+    },
+    {
+      "hypothesis": "Overdue service",
+      "verdict": "No",
+      "why": "30k service done on time (04-04); problem was service quality, not lateness"
+    },
+    {
+      "hypothesis": "Brake/tyre issues",
+      "verdict": "No",
+      "why": "Unrelated systems; pads and puncture repaired"
+    }
+  ],
+  "what_would_have_prevented": [
+    "OEM 1.1 bar cap + real flush with 50:50 premix",
+    "Pressure test + hose/pump inspection at service",
+    "Act on low-coolant lamp 2026-10-14 (water-pump weep)",
+    "Stop the car at the red temperature warning on 2026-10-22",
+    "Do not clear overheating DTCs"
+  ],
+  "confidence": "High (0.9) on chain: cooling failure -> overheat -> head gasket -> oil contamination -> bearing failure. Medium on exact failed component (water-pump seal vs hose) until teardown.",
+  "post_failure_inspection_synthetic": {
+    "coolant_sample": {
+      "glycol_pct": 17,
+      "spec_pct": 50,
+      "tds_ppm": 520,
+      "ph": 7.1,
+      "note": "hard-water scale deposits in radiator tubes"
+    },
+    "radiator_cap_opening_bar": 0.88,
+    "oem_cap_bar": 1.1,
+    "water_pump": "shaft-seal weep trail, bearing OK",
+    "head_gasket": "breach cyl 3-4 to coolant jacket; combustion gas test positive",
+    "head_warp_mm": 0.18,
+    "head_warp_limit_mm": 0.05,
+    "oil_sample": {
+      "coolant_contamination_pct": 8.7,
+      "grade_found": "15W-40 CF-4",
+      "spec": "5W-30 C3"
+    },
+    "engine": "cyl-3 big-end bearing spun, crank journal scored, rod bent; engine seized",
+    "cleared": {
+      "intake": "dry",
+      "battery": "healthy",
+      "injectors": "balanced",
+      "fuel_filter": "no water"
+    }
+  }
+}

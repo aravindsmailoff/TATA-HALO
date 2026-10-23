@@ -177,6 +177,85 @@ async def history(q: str, k: int = 5):
     }
 
 
+@app.get("/kg")
+async def get_knowledge_graph():
+    """Returns full overview of the in-memory Automotive Knowledge Graph."""
+    if _rag is None or not hasattr(_rag, "kg"):
+        raise HTTPException(status_code=503, detail="Knowledge Graph not initialized.")
+    return {
+        "status": "OK",
+        "entity_count": len(_rag.kg.entities),
+        "triplet_count": len(_rag.kg.triplets),
+        "entities": [
+            {
+                "id": e.id,
+                "name": e.name,
+                "category": e.category,
+                "attributes": e.attributes,
+                "aliases": e.aliases,
+            }
+            for e in _rag.kg.entities.values()
+        ],
+        "triplets": [t.to_fact() for t in _rag.kg.triplets],
+    }
+
+
+@app.post("/kg/query")
+async def query_knowledge_graph(req: QueryRequest):
+    """Semantic subgraph query directly over the Automotive Knowledge Graph."""
+    if _rag is None or not hasattr(_rag, "kg"):
+        raise HTTPException(status_code=503, detail="Knowledge Graph not initialized.")
+    subgraph = _rag.kg.query_subgraph(req.query)
+    direct_res = _rag.kg.resolve_answer(req.query)
+    return {
+        "status": "OK",
+        "query": req.query,
+        "matched_entities": subgraph["entity_names"],
+        "triplets": subgraph["triplets"],
+        "direct_answer": direct_res,
+        "prompt_context": subgraph["prompt_context"],
+    }
+
+
+@app.get("/cdm/status")
+async def get_cdm_status():
+    """Returns overview of the 24/7 Common Data Model (CDM) Digital Twin."""
+    if _rag is None or not hasattr(_rag, "twin_reasoner") or _rag.twin_reasoner is None:
+        raise HTTPException(status_code=503, detail="CDM Digital Twin not initialized.")
+    twin = _rag.twin_reasoner
+    return {
+        "status": "OK",
+        "vin": twin.master.vin if twin.master else "UNKNOWN",
+        "vehicle": f"{twin.master.make} {twin.master.model} ({twin.master.variant})" if twin.master else "Unknown",
+        "total_days_observed": len(twin.daily),
+        "total_distance_km": twin.metrics.get("total_distance_km", 0.0),
+        "components_count": len(twin.components),
+        "service_events_count": len(twin.services),
+        "diagnostic_events_count": len(twin.diagnostic_events),
+        "overheat_days": twin.metrics.get("overheat_days", []),
+        "last_observed_date": twin.metrics.get("end_date", ""),
+    }
+
+
+@app.get("/cdm/diagnosis")
+async def get_cdm_diagnosis():
+    """Returns the comprehensive 24/7 causal root-cause diagnosis from the Digital Twin."""
+    if _rag is None or not hasattr(_rag, "twin_reasoner") or _rag.twin_reasoner is None:
+        raise HTTPException(status_code=503, detail="CDM Digital Twin not initialized.")
+    return _rag.twin_reasoner._diagnose_breakdown_root_cause()
+
+
+@app.post("/cdm/query")
+async def query_cdm(req: QueryRequest):
+    """Direct query against the 24/7 CDM Digital Twin Reasoner."""
+    if _rag is None or not hasattr(_rag, "twin_reasoner") or _rag.twin_reasoner is None:
+        raise HTTPException(status_code=503, detail="CDM Digital Twin not initialized.")
+    res = _rag.twin_reasoner.reason(req.query)
+    if res is None:
+        return {"status": "NOT_FOUND", "answer": "Query did not match CDM causal rules.", "data": None}
+    return res
+
+
 @app.post("/inject-fault")
 async def inject_fault(req: FaultInjectRequest, background_tasks: BackgroundTasks):
     """Inject a simulated fault scenario (DEV/TEST USE ONLY)."""

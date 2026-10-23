@@ -1,0 +1,21 @@
+part_id,service_id,date,odometer_km,part_name,system,part_kind,oem_part_no,part_grade,qty,unit_price_inr,total_inr,reason_for_replacement,trigger_ref,removed_part_condition,installed_by,warranty_months,spec_conformant
+PRT001,SVC005,2025-11-21,25091.0,Front wiper blade (pair),Body/Visibility,replacement,SYN-BOD-0101,aftermarket,1.0,640,640.0,Streaking and judder after monsoon; flagged at S01,S01,Rubber split at edges,AutoPlus,3,Yes
+PRT002,SVC008,2025-12-13,25796.7,Dashcam front+rear kit,Accessories,accessory,SYN-ACC-0102,aftermarket,1.0,7800,7800.0,Owner-requested accessory,,,DriveMate,12,Yes
+PRT003,SVC008,2025-12-13,25796.7,Hardwire kit with add-a-circuit fuse tap,Electrical,accessory,SYN-ELE-0103,aftermarket,1.0,650,650.0,Parking-mode power for dashcam,,,DriveMate,6,No (tapped constant-12V; caused parasitic draw 0.42 A)
+PRT004,SVC009,2026-01-10,26996.4,Wheel balancing weights,Wheels,consumable,SYN-WHE-0104,aftermarket,16.0,8,128.0,Balancing after rotation,,,City Tyre Hub,0,Yes
+PRT005,SVC013,2026-02-18,29006.4,12V battery 70Ah / 640 CCA,Electrical,replacement,SYN-ELE-0105,aftermarket,1.0,5500,5500.0,"Failed load test (180 A vs 600 CCA), deep-discharged repeatedly by dashcam parasitic draw; P0562 on 16-Feb",DTC P0562,"Sulfated, SoH < 30%",Voltage Point,48,Yes
+PRT006,SVC013,2026-02-18,29006.4,Add-a-circuit fuse tap (ignition-switched),Electrical,consumable,SYN-ELE-0106,aftermarket,1.0,60,60.0,Move dashcam to switched fuse; removes parasitic drain,S03,,Voltage Point,0,Yes
+PRT007,SVC015,2026-03-10,29728.7,Refrigerant R134a,HVAC,consumable,SYN-HVA-0107,OEM-equivalent,0.38,3900,1482.0,Low refrigerant; P0532 low-pressure signal,DTC P0532,,CoolAir,0,Yes
+PRT008,SVC015,2026-03-10,29728.7,Cabin air filter,HVAC,replacement,SYN-HVA-0108,aftermarket,1.0,450,450.0,Clogged; weak airflow,,Dust-loaded,CoolAir,0,Yes
+PRT009,SVC015,2026-03-10,29728.7,Condenser fitting O-ring,HVAC,replacement,SYN-HVA-0109,OEM-equivalent,1.0,60,60.0,Slow refrigerant leak,,Hardened,CoolAir,0,Yes
+PRT010,SVC016,2026-04-04,30542.6,Engine oil 15W-40 CF-4 (non-low-SAPS),Lubrication,consumable,SYN-LUB-0110,aftermarket,5.0,330,1650.0,"Scheduled change. SPEC DEVIATION: OEM requires 5W-30 ACEA C3 (low-SAPS, DPF-safe)",S08,,QuickFix,0,No (grade/spec wrong for DPF diesel)
+PRT011,SVC016,2026-04-04,30542.6,Engine oil filter,Lubrication,replacement,SYN-LUB-0111,aftermarket,1.0,260,260.0,Scheduled replacement,S08,,QuickFix,0,Partial (non-OEM)
+PRT012,SVC016,2026-04-04,30542.6,Fuel filter with water separator,Fuel,replacement,SYN-FUE-0112,aftermarket,1.0,680,680.0,"Scheduled replacement at 30,000 km",S08,,QuickFix,0,Partial (non-OEM)
+PRT013,SVC016,2026-04-04,30542.6,Radiator cap (universal 0.9 bar),Cooling,replacement,SYN-COO-0113,aftermarket,1.0,150,150.0,Workshop said old cap rubber hardened. SPEC DEVIATION: OEM cap is 1.1 bar,S08,Original cap passed 1.1 bar test at P3,QuickFix,0,"No (0.9 bar < 1.1 bar OEM -> lower boiling margin, vents coolant)"
+PRT014,SVC016,2026-04-04,30542.6,Coolant concentrate (top-up),Cooling,consumable,SYN-COO-0114,aftermarket,0.4,450,180.0,"Billed as ""flush & refill 6.5 L"" - actually 0.4 L concentrate + ~1.1 L tap water topped up",S08,,QuickFix,0,No (tap water dilution; OEM = OAT 50:50 premix)
+PRT015,SVC016,2026-04-04,30542.6,Drain plug washer,Lubrication,consumable,SYN-LUB-0115,aftermarket,1.0,30,30.0,Routine,S08,,QuickFix,0,Yes
+PRT016,SVC020,2026-06-09,32946.0,Tyre puncture plug/patch,Wheels,consumable,SYN-WHE-0116,aftermarket,1.0,250,250.0,Nail puncture RR,TPMS lamp 8-Jun,Nail in shoulder,City Tyre Hub,0,Yes
+PRT017,SVC024,2026-08-02,34406.6,Front brake pad set,Brakes,replacement,SYN-BRA-0117,aftermarket,1.0,1850,1850.0,Pads worn to 2.8 mm; wear-indicator squeal,,Worn 2.8 mm,QuickFix,6,Yes
+PRT018,SVC026,2026-08-18,35187.2,Diesel system cleaner additive,Fuel,consumable,SYN-FUE-0118,aftermarket,1.0,350,350.0,After water in fuel,DTC P0087,,QuickFix,0,Yes
+PRT019,SVC029,2026-10-16,37025.9,Plain tap water 1.2 L (coolant top-up),Cooling,consumable,SYN-COO-0119,non-OEM,1.2,0,0.0,Low-coolant lamp 3 days; owner DIY,lamp 14-Oct,,Owner,0,No (should be OAT 50:50 premix)
+PRT020,SVC030,2026-10-20,37111.9,Plain tap water 0.5 L (coolant top-up),Cooling,consumable,SYN-COO-0120,non-OEM,0.5,0,0.0,Reservoir low again,,,Owner,0,No

@@ -1,0 +1,148 @@
+{
+  "disclaimer": "SYNTHETIC. Modelled on a compact-SUV 1.5 L CRDi diesel; part numbers are fake; fluid capacities approximate. Not an official OEM spec sheet.",
+  "identity": {
+    "make": "Hyundai (modelled)",
+    "model": "Creta-class compact SUV",
+    "variant": "1.5 CRDi SX 6MT",
+    "model_year": 2023,
+    "vin": "MALSYN1CRD0000123",
+    "registration": "TN 09 SY 4821 (synthetic)",
+    "colour": "Polar White",
+    "manufactured": "2023-07",
+    "registered": "2023-08-18",
+    "owner_count": 1,
+    "usage": "City commute (Chennai) + occasional highway",
+    "odometer_window_start_km": 24310.4,
+    "odometer_at_failure_km": 37425.0
+  },
+  "engine": {
+    "code": "U2-class 1.5 CRDi",
+    "cylinders": "4 inline",
+    "displacement_cc": 1493,
+    "power": "113 PS @ 4000 rpm",
+    "torque": "250 Nm @ 1500-2750 rpm",
+    "turbo": "VGT",
+    "fuel_system": "Common-rail direct injection (~1,800 bar)",
+    "valvetrain": "DOHC 16V, timing chain",
+    "block": "cast",
+    "head": "aluminium",
+    "compression_ratio": "~17.5:1",
+    "emissions": "BS6 (DOC + DPF + NOx module, modelled)",
+    "idle_rpm": 780
+  },
+  "transmission": {
+    "type": "6-speed manual",
+    "drive": "FWD",
+    "ratios_rpm_per_kmph": {
+      "1": 105,
+      "2": 60,
+      "3": 38,
+      "4": 28,
+      "5": 22,
+      "6": 18
+    }
+  },
+  "chassis": {
+    "front_susp": "MacPherson strut",
+    "rear_susp": "CTBA",
+    "brakes": "Front ventilated disc / rear disc, ABS+ESC",
+    "steering": "EPS",
+    "tyres": "215/60 R17",
+    "tyre_psi_cold": "33 F / 33 R (spec)",
+    "ground_clearance_mm": 190,
+    "kerb_weight_kg": 1300,
+    "fuel_tank_l": 50
+  },
+  "fluids_oem_spec": {
+    "engine_oil": "5W-30 ACEA C3 (low-SAPS, DPF-safe), ~5.3 L",
+    "coolant": "OAT ethylene-glycol 50:50 premix, -37 C freeze, ~6.5 L",
+    "radiator_cap_bar": 1.1,
+    "brake_fluid": "DOT 4",
+    "gearbox_oil": "75W-85 GL-4 ~1.9 L",
+    "refrigerant": "R134a ~0.45 kg",
+    "washer_fluid": "2.5 L"
+  },
+  "ecu_thresholds": {
+    "thermostat_open_c": 82,
+    "fan_low_c": 95,
+    "fan_high_c": 100,
+    "temp_advisory_msg_c": 105,
+    "temp_red_lamp_c": 108,
+    "power_derate_c": 115,
+    "low_coolant_lamp_pct": 70,
+    "oil_pressure_red_kpa": 80,
+    "tpms_low_psi": 28,
+    "dpf_regen_trigger_soot_pct": 88,
+    "battery_low_cranking_v": 9.0
+  },
+  "electrical": {
+    "battery": "12 V 70 Ah / 640 CCA",
+    "alternator": "14.2 V ~110 A",
+    "original_battery_age_at_window_start_months": 26
+  },
+  "service_schedule": {
+    "interval_km": 10000,
+    "interval_months": 12,
+    "next_due": "40,000 km (30,000 km service done 2026-04-04)"
+  },
+  "ecus": [
+    {
+      "name": "ECM (engine)",
+      "bus": "CAN-HS 500 kbps",
+      "diag": "UDS ISO 14229 over ISO 15765",
+      "can_id": "0x7E0"
+    },
+    {
+      "name": "ESC/ABS",
+      "bus": "CAN-HS",
+      "can_id": "0x7B0"
+    },
+    {
+      "name": "BCM",
+      "bus": "CAN-MS 125 kbps + LIN",
+      "can_id": "0x7A0"
+    },
+    {
+      "name": "Instrument cluster",
+      "bus": "CAN-MS",
+      "can_id": "0x7C0"
+    },
+    {
+      "name": "SRS airbag",
+      "bus": "CAN-HS",
+      "can_id": "0x7D2"
+    },
+    {
+      "name": "EPS",
+      "bus": "CAN-HS",
+      "can_id": "0x7D4"
+    },
+    {
+      "name": "TPMS receiver",
+      "bus": "CAN-MS",
+      "can_id": "0x7A6"
+    },
+    {
+      "name": "Head unit / telematics",
+      "bus": "CAN-MS + Ethernet",
+      "can_id": "0x7C6"
+    },
+    {
+      "name": "HVAC",
+      "bus": "CAN-MS",
+      "can_id": "0x7B3"
+    }
+  ],
+  "insurance": {
+    "type": "Comprehensive",
+    "renewed": "2026-07-14",
+    "premium_inr": 29800,
+    "ncb_pct": 35,
+    "idv_inr": 1180000
+  },
+  "statutory": {
+    "puc": "valid 2026-07-20 to 2027-01-19",
+    "fitness": "n/a (private)",
+    "road_tax": "paid (lifetime)"
+  }
+}

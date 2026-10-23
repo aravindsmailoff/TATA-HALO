@@ -204,11 +204,32 @@ class TimeSeriesDB:
         return self.query_severity("FAULT", hours=days * 24) + \
                self.query_severity("CRITICAL", hours=days * 24)
 
-    def get_stats(self) -> dict:
-        row = self._conn.execute(
-            "SELECT COUNT(*) as total, MIN(ts_us) as oldest, MAX(ts_us) as newest FROM signals"
-        ).fetchone()
-        return dict(row) if row else {}
+    def query_historical_vitals(self, days: int = 7) -> dict:
+        """Calculate aggregated statistical vitals from rolling historical storage."""
+        def _agg(signal_id):
+            row = self._conn.execute(
+                "SELECT MIN(value), MAX(value), AVG(value), COUNT(*) FROM signals WHERE signal_id=?",
+                (signal_id.upper(),)
+            ).fetchone()
+            if row and row[3] > 0:
+                return {"min": round(row[0] or 0.0, 1), "max": round(row[1] or 0.0, 1), "avg": round(row[2] or 0.0, 1), "count": row[3]}
+            return {"min": 0.0, "max": 0.0, "avg": 0.0, "count": 0}
+
+        faults = self.query_faults(days=days)
+        total_row = self._conn.execute("SELECT COUNT(*) FROM signals").fetchone()
+        total_records = total_row[0] if total_row else 0
+        return {
+            "speed": _agg("PERF_VEHICLE_SPEED"),
+            "rpm": _agg("ENGINE_RPM"),
+            "coolant": _agg("ENGINE_COOLANT_TEMP"),
+            "battery": _agg("BATTERY_VOLTAGE"),
+            "fuel": _agg("FUEL_LEVEL"),
+            "tyres": _agg("TIRE_PRESSURE_FL"),
+            "oil": _agg("OIL_PRESSURE"),
+            "fault_count": len(faults),
+            "recent_faults": [f.get("signal_id") for f in faults[:5]],
+            "total_records": total_records,
+        }
 
     def close(self):
         self.flush()

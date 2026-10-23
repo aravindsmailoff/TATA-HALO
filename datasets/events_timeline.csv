@@ -1,0 +1,88 @@
+event_id,timestamp,odometer_km,category,severity,source,title,detail,ref_ids
+EVT0001,2025-10-26 09:30:00,24368.3,service,info,authorized_dealer,"inspection: Multi-point check: battery load test, coolant test, brakes, tyres, wipers, OBD scan","Battery 560 A vs 600 CCA rated (SoH 93%); coolant freeze point -36 C, pH 8.3, level at MAX; pads F 8.9 mm / R 9.5 mm; tread 5.9/5.9/5.8/5.8 mm; wipers worn; OBD: no DTCs | Flag: ",SVC004
+EVT0002,2025-10-31 18:49:00,24557.2,refuel,info,pump,"Refuel 39.97 L @ Shell, Perungudi",,FUL001
+EVT0003,2025-11-08 18:20:00,24723.0,environment,medium,owner,Waded ~28 cm floodwater for ~40 m (heavy rain 96 mm),"Air intake checked next day: dry filter, no water ingestion, engine ran normally; no DTC",
+EVT0004,2025-11-09 09:00:00,24736.2,inspection,info,owner,Post-flood self check,Oil level and colour normal; no misfire; no DTC,
+EVT0005,2025-11-21 18:45:00,25091.0,service,medium,accessory_shop,repair: Front wiper blade pair,Streaking after monsoon | Flag: ,SVC005
+EVT0006,2025-11-21 18:57:00,25091.0,refuel,info,pump,"Refuel 40.04 L @ HP, Medavakkam",,FUL002
+EVT0007,2025-11-22 16:30:00,25123.1,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC006
+EVT0008,2025-12-06 16:30:00,25627.3,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC007
+EVT0009,2025-12-08 18:07:00,25683.9,refuel,info,pump,"Refuel 39.7 L @ Bharat Petroleum, OMR Sholinganallur",,FUL003
+EVT0010,2025-12-13 11:00:00,25796.7,service,info,accessory_shop,"accessory_install: Front+rear dashcam kit, hardwire kit",Hardwire tapped to constant-12 V fuse (add-a-circuit) so camera stays powered while parked | Flag: Parasitic draw not tested at install,SVC008
+EVT0011,2025-12-26 18:21:00,26150.3,refuel,info,pump,"Refuel 34.27 L @ HP, Medavakkam",,FUL004
+EVT0012,2026-01-05 19:09:00,26867.7,refuel,info,pump,"Refuel 40.58 L @ Bharat Petroleum, OMR Sholinganallur",,FUL005
+EVT0013,2026-01-06 19:10:00,26898.1,incident,low,owner,"Minor parking scrape, rear bumper",No airbag/sensor damage; repaired 24-Jan,
+EVT0014,2026-01-10 10:00:00,26996.4,service,info,tyre_shop,"maintenance: Wheel rotation, balancing, 4-wheel alignment",Front toe out of spec (0.31 deg) corrected; average tread 5.4 mm | Flag: ,SVC009
+EVT0015,2026-01-13 18:59:00,27110.2,refuel,info,pump,"Refuel 17.32 L @ HP, Medavakkam",,FUL006
+EVT0016,2026-01-17 16:40:00,28075.2,refuel,info,pump,"Refuel 48.22 L @ IndianOil, Navalur OMR",,FUL007
+EVT0017,2026-01-24 10:00:00,28244.6,service,info,body_shop,bodywork: Rear bumper dent repair + repaint (parking scrape 6-Jan),Cosmetic only; no structural or sensor damage | Flag: ,SVC010
+EVT0018,2026-01-31 16:30:00,28461.2,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC011
+EVT0019,2026-02-05 18:37:00,28609.6,refuel,info,pump,"Refuel 39.49 L @ Shell, Perungudi",,FUL008
+EVT0020,2026-02-07 16:30:00,28663.7,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC012
+EVT0021,2026-02-16 08:08:26,28906.4,dtc,medium,ECM,P0562 System Voltage Low (confirmed),,DTC001
+EVT0022,2026-02-16 08:08:28,28906.4,warning_lamp,high,cluster,Battery/charging lamp (red),cranking min < 9.0 V; rest V 12.0. Driver: drove to office; booked battery test,
+EVT0023,2026-02-18 18:45:00,29006.4,service,medium,battery_shop,repair: 12V battery replacement + dashcam rewire to ignition-switched fuse,"Old battery: 180 A vs 600 CCA, cranking 8.9 V; parasitic draw 0.42 A measured at dashcam tap (root cause of deep discharges) | Flag: ",SVC013
+EVT0024,2026-02-23 18:55:00,29132.8,refuel,info,pump,"Refuel 38.96 L @ Shell, Perungudi",,FUL009
+EVT0025,2026-03-01 16:48:00,29439.2,warning_lamp,low,cluster,Service reminder lamp (info),"service due within 500 km (30,000 km). Driver: booked independent workshop",
+EVT0026,2026-03-07 16:30:00,29658.9,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC014
+EVT0027,2026-03-09 18:35:03,29675.1,dtc,low,ECM,P0532 A/C Refrigerant Pressure Sensor A Circuit Low (stored),,DTC002
+EVT0028,2026-03-10 18:45:00,29728.7,service,medium,specialist_workshop,"repair: AC gas top-up (R134a 380 g), cabin filter, condenser O-ring",Refrigerant low (slow leak at condenser fitting); cabin filter clogged; P0532 cleared | Flag: ,SVC015
+EVT0029,2026-03-11 18:28:00,29765.5,refuel,info,pump,"Refuel 41.8 L @ HP, Medavakkam",,FUL010
+EVT0030,2026-03-28 18:02:00,30357.6,refuel,info,pump,"Refuel 42.0 L @ IndianOil, Navalur OMR",,FUL011
+EVT0031,2026-04-04 10:30:00,30542.6,service,high,independent_workshop,"scheduled_service: Engine oil change 5.0 L 15W-40, oil filter, fuel filter, air filter cleaning, COOLANT FLUS","Invoice shows 30,000 km service; no coolant test strip, no pressure test, no hose inspection recorded | Flag: Cost-saving visit; spec deviations: oil grade (15W-40 CF-4 vs 5W-30 C3), non-OEM 0.9 bar cap vs 1.1 bar OEM, coolant flush billed but not done",SVC016
+EVT0032,2026-04-11 16:30:00,30713.3,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC017
+EVT0033,2026-04-18 18:11:00,30983.8,refuel,info,pump,"Refuel 44.3 L @ IndianOil, Navalur OMR",,FUL012
+EVT0034,2026-05-09 16:30:00,31408.9,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC018
+EVT0035,2026-05-12 18:35:00,31496.8,refuel,info,pump,"Refuel 41.27 L @ HP, Medavakkam",,FUL013
+EVT0036,2026-05-22 18:22:00,31797.9,refuel,info,pump,"Refuel 23.31 L @ HP, Medavakkam",,FUL014
+EVT0037,2026-05-24 22:01:00,32501.9,refuel,info,pump,"Refuel 49.37 L @ Shell, Perungudi",,FUL015
+EVT0038,2026-06-06 16:30:00,32885.1,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC019
+EVT0039,2026-06-08 07:59:34,32885.1,warning_lamp,low,cluster,TPMS low tyre pressure lamp (amber),RR < 28 psi. Driver: checked next day: nail in RR tyre,
+EVT0040,2026-06-09 18:40:00,32946.0,service,medium,tyre_shop,repair: Puncture repair RR (nail),Nail in RR shoulder; TPMS lamp since 8-Jun | Flag: ,SVC020
+EVT0041,2026-06-11 19:29:00,33014.6,refuel,info,pump,"Refuel 40.12 L @ Bharat Petroleum, OMR Sholinganallur",,FUL016
+EVT0042,2026-07-05 10:14:00,33504.1,refuel,info,pump,"Refuel 39.82 L @ Bharat Petroleum, OMR Sholinganallur",,FUL017
+EVT0043,2026-07-14 11:00:00,33746.8,service,info,online,admin: Comprehensive insurance renewal,NCB retained | Flag: ,SVC021
+EVT0044,2026-07-18 16:30:00,33887.5,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC022
+EVT0045,2026-07-20 18:20:00,33905.9,service,info,statutory,statutory: PUC emission test,PASS - smoke opacity 0.41 m^-1 | Flag: ,SVC023
+EVT0046,2026-07-23 19:07:00,34028.9,refuel,info,pump,"Refuel 40.79 L @ Bharat Petroleum, OMR Sholinganallur",,FUL018
+EVT0047,2026-08-02 11:00:00,34406.6,service,medium,independent_workshop,repair: Front brake pads + rotor skim,Pads at 2.8 mm (squeal); rotors skimmed; NOTE coolant reservoir and hoses not inspected | Flag: ,SVC024
+EVT0048,2026-08-06 19:10:00,34574.0,refuel,info,pump,"Refuel 39.94 L @ HP, Medavakkam",,FUL019
+EVT0049,2026-08-08 16:30:00,34628.9,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC025
+EVT0050,2026-08-14 18:00:00,34800.3,refuel,high,pump,"Refuel 17.35 L @ Unbranded roadside pump, Medavakkam",Pump later suspected of water-contaminated diesel (see events),FUL020
+EVT0051,2026-08-17 08:52:59,35122.2,dtc,medium,ECM,P0087 Fuel Rail/System Pressure Too Low (pending),,DTC003
+EVT0052,2026-08-17 08:53:59,35122.2,warning_lamp,low,cluster,Water in fuel lamp (amber),water separator sensor. Driver: ignored 1 day; drained next evening,
+EVT0053,2026-08-18 18:40:00,35187.2,service,medium,independent_workshop,repair: Drain water from fuel filter separator + diesel system cleaner,~60 ml water drained after unbranded-pump fill; P0087 cleared | Flag: ,SVC026
+EVT0054,2026-08-27 18:37:00,35405.3,refuel,info,pump,"Refuel 40.8 L @ Bharat Petroleum, OMR Sholinganallur",,FUL021
+EVT0055,2026-09-03 17:09:28,35760.5,dtc,high,ECM,P0217 Engine Over-Temperature Condition (pending),Code erased by owner next day; freeze frame retained in ECU event log,DTC004
+EVT0056,2026-09-03 17:13:08,35760.5,warning_lamp,high,cluster,Engine coolant temp lamp (red),"coolant >= 108 C (108.3 C) in traffic jam, AC on. Driver: continued driving after jam cleared",
+EVT0057,2026-09-04 20:41:00,35816.4,owner_action,high,owner,Owner cleared P0217 with OBD dongle app,Erased visible overheating history; ECU event log retained freeze frame,DTC001
+EVT0058,2026-09-09 18:19:00,35970.9,refuel,info,pump,"Refuel 40.31 L @ Bharat Petroleum, OMR Sholinganallur",,FUL022
+EVT0059,2026-09-12 16:30:00,36020.4,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC027
+EVT0060,2026-09-27 12:27:00,36541.8,refuel,info,pump,"Refuel 39.71 L @ HP, Medavakkam",,FUL023
+EVT0061,2026-10-10 16:30:00,36851.3,service,info,car_spa,cleaning: Foam wash + interior vacuum,Under-bonnet NOT opened | Flag: ,SVC028
+EVT0062,2026-10-14 07:43:13,36913.6,warning_lamp,low,cluster,Low coolant level lamp (amber),reservoir level 69.9 % (< 70 %). Driver: ignored; assumed sensor fault,
+EVT0063,2026-10-14 07:49:13,36913.6,dtc,medium,ECM,P2181 Cooling System Performance (pending),first appearance; remained stored,DTC005
+EVT0064,2026-10-14 08:41:00,36934.0,owner_observation,high,owner,Low-coolant lamp ignored,Assumed sensor glitch after monsoon,
+EVT0065,2026-10-15 08:01:54,36955.5,warning_lamp,low,cluster,Low coolant level lamp (amber),reservoir level 69.7 % (< 70 %). Driver: ignored,
+EVT0066,2026-10-15 18:08:00,36972.7,dtc,high,ECM,P0217 Engine Over-Temperature Condition (stored),"stop-go traffic, AC on",DTC006
+EVT0067,2026-10-15 18:09:00,36972.7,warning_lamp,low,cluster,Engine temp advisory message lamp (amber),coolant >= 105 C. Driver: none,
+EVT0068,2026-10-16 07:59:30,36989.9,warning_lamp,low,cluster,Low coolant level lamp (amber),reservoir level 67.7 % (< 70 %). Driver: owner topped up with plain water that evening,
+EVT0069,2026-10-16 19:20:00,37025.9,service,high,owner_DIY,owner_diy: Coolant top-up 1.2 L (plain tap water),"Owner saw low-coolant lamp for 3 days; topped up with tap water, did not find the leak | Flag: ",SVC029
+EVT0070,2026-10-19 18:31:00,37073.5,refuel,info,pump,"Refuel 40.3 L @ Bharat Petroleum, OMR Sholinganallur",,FUL024
+EVT0071,2026-10-19 20:30:00,37073.5,owner_observation,medium,owner,Faint sweet smell near radiator after parking,Assumed AC / washer fluid,
+EVT0072,2026-10-20 19:10:00,37111.9,service,high,owner_DIY,owner_diy: Coolant top-up 0.5 L (plain tap water),Reservoir low again within 4 days | Flag: ,SVC030
+EVT0073,2026-10-22 16:51:42,37285.6,dtc,critical,ECM,P0217 Engine Over-Temperature Condition (confirmed),"highway traffic jam, AC on",DTC007
+EVT0074,2026-10-22 16:52:00,37285.6,owner_observation,critical,owner,Red temperature warning in highway jam,Kept driving ~2 h to reach home; switched cabin heater on; did not top up or call assistance,
+EVT0075,2026-10-22 16:52:52,37285.6,warning_lamp,high,cluster,Engine coolant temp lamp (red),coolant >= 108 C; peaked 118.6 C. Driver: kept driving ~2 h to reach home; cabin heater switched on,
+EVT0076,2026-10-22 17:04:52,37285.6,warning_lamp,high,cluster,Low coolant level lamp (red),reservoir level 69.7 % and falling (boil-over). Driver: ignored,
+EVT0077,2026-10-23 07:42:44,37423.6,dtc,high,ECM,P0300 Random/Multiple Cylinder Misfire Detected (active),,DTC008
+EVT0078,2026-10-23 07:42:44,37423.6,warning_lamp,low,cluster,Check engine (MIL) lamp (amber),misfire detected. Driver: owner kept driving ~3 min,
+EVT0079,2026-10-23 07:42:44,37423.6,dtc,high,ECM,P0304 Cylinder 4 Misfire Detected (active),,DTC010
+EVT0080,2026-10-23 07:42:44,37423.6,dtc,high,ECM,P0303 Cylinder 3 Misfire Detected (active),,DTC009
+EVT0081,2026-10-23 07:44:00,37423.6,owner_observation,critical,owner,"White smoke, rough running, knocking, then stall",Engine would not restart (crank blocked),
+EVT0082,2026-10-23 07:45:54,37423.6,warning_lamp,high,cluster,Engine coolant temp lamp (red),coolant 108.2 C (ROC ~2 C/s). Driver: kept driving,
+EVT0083,2026-10-23 07:45:54,37423.6,dtc,critical,ECM,P0217 Engine Over-Temperature Condition (active),"coolant reading jumped ~32 -> 118 C in ~37 s (steam at sensor, implausible rate of rise); level sensor falling",DTC011
+EVT0084,2026-10-23 07:46:11,37423.6,dtc,critical,ECM,P0524 Engine Oil Pressure Too Low (active),,DTC012
+EVT0085,2026-10-23 07:46:22,37423.6,warning_lamp,high,cluster,Engine oil pressure lamp (red),oil pressure < 80 kPa. Driver: kept driving; engine stalled shortly after,
+EVT0086,2026-10-23 07:47:10,37423.6,dtc,critical,ECM,"P0335 Crankshaft Position Sensor A Circuit (signal lost, engine stopped) (active)",,DTC013
+EVT0087,2026-10-23 08:05:00,37425.0,breakdown,critical,owner,Roadside assistance requested; towed to authorised dealer,Arrived 11:40,
